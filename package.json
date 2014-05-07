@@ -1,0 +1,26 @@
+{
+  "name": "cloudy-sword",
+  "version": "0.0.1",
+  "description": "Turn-based arena battle game, written in JavaScript and Node.js.",
+  "main": "index.js",
+  "dependencies": {
+    "socket.io": "^0.9.16"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Semicolon314/cloudy-sword.git"
+  },
+  "keywords": [
+    "game"
+  ],
+  "author": "WCI CS Club",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Semicolon314/cloudy-sword/issues"
+  },
+  "homepage": "https://github.com/Semicolon314/cloudy-sword"
+}

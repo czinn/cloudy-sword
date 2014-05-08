@@ -1,3 +1,5 @@
+![Logo](https://raw.githubusercontent.com/Semicolon314/cloudy-sword/master/icon.png)
+
 cloudy-sword
 ============
 

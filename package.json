@@ -4,7 +4,9 @@
   "description": "Turn-based arena battle game, written in JavaScript and Node.js.",
   "main": "index.js",
   "dependencies": {
-    "socket.io": "^0.9.16"
+    "socket.io": "^0.9.16",
+    "express": "4.1.2",
+	"serve-favicon": "2.0.0"
   },
   "devDependencies": {},
   "scripts": {

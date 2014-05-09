@@ -1,0 +1,73 @@
+<html>
+<head>
+<title>Cloudy Sword</title>
+<link rel = "stylesheet" type = "text/css" href = "/static/style.css">
+<script src="/socket.io/socket.io.js"></script>
+<script>
+
+var FPS = 30;
+
+var messages = [];
+
+function init() {
+	messages.push("Initialized.");
+	resize();
+	render();
+	
+	//Conect to server with Socket.IO
+	var socket = io.connect("http://localhost:5000");
+	socket.on("connecting", function() {
+		messages.push("Connecting to server...");
+	});
+	var pingtime = 0;
+	socket.on("connect", function() {
+		messages.push("Connected. Sending ping event...");
+		pingtime = new Date().getTime();
+		socket.emit("ping", {msg: "Everything works!"});
+	});
+	socket.on("pong", function(data) {
+		messages.push("Received pong event: " + data.msg);
+		messages.push("Ping time: " + (new Date().getTime() - pingtime) + "ms.");
+	});
+	socket.on("disconnect", function() {
+		messages.push("Disconnected from the server.");
+	});
+	
+	//Start render timer
+	setInterval(render, 1000 / FPS);
+}
+
+function render() {
+	//Get the canvas context object
+	var canvas = document.getElementById("canvas");
+	var ctx = canvas.getContext("2d");
+	
+	//Clear the canvas with a black background
+	ctx.fillStyle = "#000000";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	
+	//Draw messages
+	ctx.fillStyle = "#FFFFFF";
+	ctx.font = "20px Arial";
+	for(var i = 0; i < messages.length; i++) {
+		ctx.fillText(messages[i], 100, 100 + i * 30);
+	}
+}
+
+function resize() {
+	var canvas = document.getElementById("canvas");
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+	render();
+}
+
+window.onload = init;
+window.onresize = resize;
+
+</script>
+</head>
+
+<body>
+	<canvas id = "canvas"> Your browser does not support canvas.</canvas>
+</body>
+</html>

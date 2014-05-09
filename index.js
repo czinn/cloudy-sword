@@ -1,16 +1,34 @@
-// Load the http module.
-var http = require('http')
-var socketio = require('socket.io');
+// Load required modules
+var express = require("express");
+var favicon = require("serve-favicon");
+var socketio = require("socket.io");
 
-// Hello World
-var server = http.createServer(function (request, response) {
-  response.writeHead(200, {"Content-Type": "text/plain"});
-  response.end("Hello World\n");
+//Create the express app
+var app = express();
+
+//Set up static file directory and favicon
+app.use("/static", express.static(__dirname + "/static"));
+app.use(favicon(__dirname + "/static/favicon.ico"));
+
+/* ------------ APPLICATION PAGES ------------ */
+app.get("/", function(req, res) {
+	res.sendfile(__dirname + "/views/index.html");
 });
 
-// Initialize Socket.IO
-var io = socketio.listen(server);
+/* ------------ START SERVER ------------ */
+var server = app.listen(5000, function() {
+	console.log("Server listening on port %d", server.address().port);
+});
 
-// Listen on port 5000
-server.listen(5000);
-console.log("Server running on port 5000");
+/* ------------ SOCKET.IO ------------ */
+var io = socketio.listen(server, {log: false});
+
+//Set up Socket.IO connection handler
+io.sockets.on("connection", function(socket) {
+	console.log("A client connected with Socket.IO");
+	
+	//Set up Socket.IO event callbacks here
+	socket.on("ping", function(data) {
+		socket.emit("pong", data);
+	});
+});

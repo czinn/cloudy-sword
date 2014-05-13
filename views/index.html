@@ -3,18 +3,38 @@
 <title>Cloudy Sword</title>
 <link rel = "stylesheet" type = "text/css" href = "/static/style.css">
 <script src="/socket.io/socket.io.js"></script>
+<script src="/static/tile.js"></script>
+<script src="/static/map.js"></script>
 <script>
 
 var FPS = 30;
 
 var messages = [];
 
+var map; // normally would be inside a GameState; here only for testing purposes
+
 function init() {
+	map = new Map(9, 9);
+	map.makeHexShape();
+
 	messages.push("Initialized.");
 	resize();
 	render();
 	
-	//Conect to server with Socket.IO
+	// Add click-to-change-tile function for testing
+	var canvas = document.getElementById("canvas");
+	canvas.onclick = function(e) {
+		var mx = e.pageX - e.target.offsetLeft;
+		var my = e.pageY - e.target.offsetTop;
+		var tile = map.hexAt(mx + 140, my - 10);
+		//alert(tile.x + "," + tile.y);
+		if(map.terrain[tile.y][tile.x] == Tile.NORMAL)
+			map.terrain[tile.y][tile.x] = Tile.WALL;
+		else if(map.terrain[tile.y][tile.x] == Tile.WALL)
+			map.terrain[tile.y][tile.x] = Tile.NORMAL;
+	};
+	
+	// Connect to server with Socket.IO
 	var socket = io.connect("http://localhost:5000");
 	socket.on("connecting", function() {
 		messages.push("Connecting to server...");
@@ -33,24 +53,27 @@ function init() {
 		messages.push("Disconnected from the server.");
 	});
 	
-	//Start render timer
+	// Start render timer
 	setInterval(render, 1000 / FPS);
 }
 
 function render() {
-	//Get the canvas context object
+	// Get the canvas context object
 	var canvas = document.getElementById("canvas");
 	var ctx = canvas.getContext("2d");
 	
-	//Clear the canvas with a black background
+	// Clear the canvas with a black background
 	ctx.fillStyle = "#000000";
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	
-	//Draw messages
-	ctx.fillStyle = "#FFFFFF";
+	// Draw the map
+	map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, 150, 0);
+	
+	// Draw messages
+	ctx.fillStyle = "#FF0000";
 	ctx.font = "20px Arial";
 	for(var i = 0; i < messages.length; i++) {
-		ctx.fillText(messages[i], 100, 100 + i * 30);
+		ctx.fillText(messages[i], 300, 100 + i * 30);
 	}
 }
 

@@ -2,11 +2,12 @@
 var express = require("express");
 var favicon = require("serve-favicon");
 var socketio = require("socket.io");
+var Map = require("./static/map.js");
 
-//Create the express app
+// Create the express app
 var app = express();
 
-//Set up static file directory and favicon
+// Set up static file directory and favicon
 app.use("/static", express.static(__dirname + "/static"));
 app.use(favicon(__dirname + "/static/favicon.ico"));
 
@@ -23,11 +24,11 @@ var server = app.listen(5000, function() {
 /* ------------ SOCKET.IO ------------ */
 var io = socketio.listen(server, {log: false});
 
-//Set up Socket.IO connection handler
+// Set up Socket.IO connection handler
 io.sockets.on("connection", function(socket) {
 	console.log("A client connected with Socket.IO");
 	
-	//Set up Socket.IO event callbacks here
+	// Set up Socket.IO event callbacks here
 	socket.on("ping", function(data) {
 		socket.emit("pong", data);
 	});

@@ -5,13 +5,14 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="/static/tile.js"></script>
 <script src="/static/map.js"></script>
+<script src="/static/gamestate.js"></script>
 <script>
 
 var FPS = 30;
 
 var messages = [];
 
-var map; // normally would be inside a GameState; here only for testing purposes
+var gs; // The local GameState
 
 // Dragging and scaling variables
 // This needs to be cleaned up at some point
@@ -20,15 +21,38 @@ var offsetx = 200, offsety = 0;
 var scale = 1.0;
 
 function init() {
-	map = new Map(15, 15);
-	map.makeHexShape();
-	pls = map.dump();
-	alert(JSON.stringify(pls));
-	map.load(pls);
+	gs = new GameState(2);
 
 	messages.push("Initialized.");
 	resize();
 	render();
+	
+	// Connect to server with Socket.IO
+	var socket = io.connect("http://localhost:5000");
+	socket.on("connecting", function() {
+		messages.push("Connecting to server...");
+	});
+	var pingtime = 0;
+	socket.on("connect", function() {
+		messages.push("Connected. Sending ping event...");
+		pingtime = new Date().getTime();
+		socket.emit("ping", {msg: "Everything works!"});
+	});
+	socket.on("pong", function(data) {
+		messages.push("Received pong event: " + data.msg);
+		messages.push("Ping time: " + (new Date().getTime() - pingtime) + "ms.");
+	});
+	socket.on("disconnect", function() {
+		messages.push("Disconnected from the server.");
+	});
+	socket.on("fullgs", function(data) {
+		// Update the entire game state
+		gs.load(data);
+	});
+	socket.on("turn", function(data) {
+		// Update with the turn data
+		gs.doTurn(data);
+	});
 	
 	// Set up the canvas
 	var canvas = document.getElementById("canvas");
@@ -36,12 +60,14 @@ function init() {
 		var mx = e.pageX - e.target.offsetLeft;
 		var my = e.pageY - e.target.offsetTop;
 		if(!dragging) {
-			var tile = map.hexAtTransformed(mx, my, 10, 10, offsetx, offsety, scale);
-			//alert(tile.x + "," + tile.y);
-			if(map.terrain[tile.y][tile.x] == Tile.NORMAL)
-				map.terrain[tile.y][tile.x] = Tile.WALL;
-			else if(map.terrain[tile.y][tile.x] == Tile.WALL)
-				map.terrain[tile.y][tile.x] = Tile.NORMAL;
+			var tile = gs.map.hexAtTransformed(mx, my, 10, 10, offsetx, offsety, scale);
+			if(tile.x >= 0 && tile.x < gs.map.cols() && tile.y >= 0 && tile.y < gs.map.rows()) {
+				// Flip the tile using the game state method
+				gs.doAction({tile: tile});
+				// Immediately send the turn to the server (not how it will actually work, just temp)
+				socket.emit("turn", gs.localTurn);
+				gs.clearTurn();
+			}
 		}
 	};
 	canvas.onmousedown = function(e) {
@@ -76,25 +102,6 @@ function init() {
 	canvas.addEventListener("mousewheel", canvasScroll, false); // Most browsers
 	canvas.addEventListener("DOMMouseScroll", canvasScroll, false); // Firefox
 	
-	// Connect to server with Socket.IO
-	var socket = io.connect("http://localhost:5000");
-	socket.on("connecting", function() {
-		messages.push("Connecting to server...");
-	});
-	var pingtime = 0;
-	socket.on("connect", function() {
-		messages.push("Connected. Sending ping event...");
-		pingtime = new Date().getTime();
-		socket.emit("ping", {msg: "Everything works!"});
-	});
-	socket.on("pong", function(data) {
-		messages.push("Received pong event: " + data.msg);
-		messages.push("Ping time: " + (new Date().getTime() - pingtime) + "ms.");
-	});
-	socket.on("disconnect", function() {
-		messages.push("Disconnected from the server.");
-	});
-	
 	// Start render timer
 	setInterval(render, 1000 / FPS);
 }
@@ -109,7 +116,7 @@ function render() {
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	
 	// Draw the map
-	map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, offsetx, offsety, scale);
+	gs.map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, offsetx, offsety, scale);
 	
 	// Draw messages
 	ctx.fillStyle = "#FF0000";

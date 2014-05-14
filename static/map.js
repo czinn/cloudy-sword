@@ -11,7 +11,6 @@ if(typeof exports === "object") {
 // Declare constants
 var HEX_HEIGHT = 200; //pixels
 
-
 /** Constructor for a map object.
   * Creates an empty map of the specified dimensions.
   */

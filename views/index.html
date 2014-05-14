@@ -14,7 +14,7 @@ var messages = [];
 var map; // normally would be inside a GameState; here only for testing purposes
 
 function init() {
-	map = new Map(9, 9);
+	map = new Map(15, 15);
 	map.makeHexShape();
 
 	messages.push("Initialized.");
@@ -26,7 +26,7 @@ function init() {
 	canvas.onclick = function(e) {
 		var mx = e.pageX - e.target.offsetLeft;
 		var my = e.pageY - e.target.offsetTop;
-		var tile = map.hexAt(mx + 140, my - 10);
+		var tile = map.hexAtTransformed(mx, my, 10, 10, 200, 0, 0.8);
 		//alert(tile.x + "," + tile.y);
 		if(map.terrain[tile.y][tile.x] == Tile.NORMAL)
 			map.terrain[tile.y][tile.x] = Tile.WALL;
@@ -67,7 +67,7 @@ function render() {
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	
 	// Draw the map
-	map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, 150, 0);
+	map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, 200, 0, 0.8);
 	
 	// Draw messages
 	ctx.fillStyle = "#FF0000";

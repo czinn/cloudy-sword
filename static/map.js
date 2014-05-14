@@ -32,7 +32,7 @@ var Map = function(rows, cols) {
   */
 Map.prototype.distance = function(x1, y1, x2, y2) {
 	return Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1), Math.abs(y2 + x2 - y1 - x1));
-}
+};
 
 /** Chops corners off to make the map shaped like a large hexagon
   * Only works properly if rows and cols are odd and equal to each other
@@ -48,15 +48,15 @@ Map.prototype.makeHexShape = function() {
 			}
 		}
 	}
-}
+};
 
 Map.prototype.rows = function() {
 	return this.terrain.length;
-}
+};
 
 Map.prototype.cols = function() {
 	return this.terrain[0].length;
-}
+};
 
 /** Gets the row and column of the hexagon that contains (px, py)
   * @returns {x: column, y: row}
@@ -88,7 +88,19 @@ Map.prototype.hexAt = function(px, py) {
 	}
 	
 	return {x: rx, y: ry};
-}
+};
+
+/** Gets the row and column of the hexagon that contains (px, py) after reversing the transformations applied during rendering
+  * See Map.render for what these transformations actually are
+  */
+Map.prototype.hexAtTransformed = function(px, py, x, y, offsetx, offsety, scale) {
+	// Set defaults
+	offsetx = typeof offsetx !== "undefined" ? offsetx : 0;
+	offsety = typeof offsety !== "undefined" ? offsety : 0;
+	scale = typeof scale !== "undefined" ? scale : 1.0;
+	
+	return this.hexAt((px + offsetx - x) / scale, (py + offsety - y) / scale);
+};
 
 /** Renders the map on the given canvas context.
   * Will render things outside the given box, but won't draw whole tiles that are outside box to save time.

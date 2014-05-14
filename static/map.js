@@ -9,7 +9,7 @@ if(typeof exports === "object") {
 }
 
 // Declare constants
-var HEX_HEIGHT = 100; //pixels
+var HEX_HEIGHT = 200; //pixels
 
 
 /** Constructor for a map object.

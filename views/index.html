@@ -13,6 +13,12 @@ var messages = [];
 
 var map; // normally would be inside a GameState; here only for testing purposes
 
+// Dragging and scaling variables
+// This needs to be cleaned up at some point
+var dragx = 0, dragy = 0, dragging = false, mousedown = false;
+var offsetx = 200, offsety = 0;
+var scale = 1.0;
+
 function init() {
 	map = new Map(15, 15);
 	map.makeHexShape();
@@ -21,18 +27,51 @@ function init() {
 	resize();
 	render();
 	
-	// Add click-to-change-tile function for testing
+	// Set up the canvas
 	var canvas = document.getElementById("canvas");
 	canvas.onclick = function(e) {
 		var mx = e.pageX - e.target.offsetLeft;
 		var my = e.pageY - e.target.offsetTop;
-		var tile = map.hexAtTransformed(mx, my, 10, 10, 200, 0, 0.8);
-		//alert(tile.x + "," + tile.y);
-		if(map.terrain[tile.y][tile.x] == Tile.NORMAL)
-			map.terrain[tile.y][tile.x] = Tile.WALL;
-		else if(map.terrain[tile.y][tile.x] == Tile.WALL)
-			map.terrain[tile.y][tile.x] = Tile.NORMAL;
+		if(!dragging) {
+			var tile = map.hexAtTransformed(mx, my, 10, 10, offsetx, offsety, scale);
+			//alert(tile.x + "," + tile.y);
+			if(map.terrain[tile.y][tile.x] == Tile.NORMAL)
+				map.terrain[tile.y][tile.x] = Tile.WALL;
+			else if(map.terrain[tile.y][tile.x] == Tile.WALL)
+				map.terrain[tile.y][tile.x] = Tile.NORMAL;
+		}
 	};
+	canvas.onmousedown = function(e) {
+		dragx = e.pageX - e.target.offsetLeft;
+		dragy = e.pageY - e.target.offsetTop;
+		mousedown = true;
+		dragging = false;
+	}
+	canvas.onmousemove = function(e) {
+		if(mousedown) {
+			var mx = e.pageX - e.target.offsetLeft;
+			var my = e.pageY - e.target.offsetTop;
+			if(dragging || Math.abs(mx - dragx) > 30 || Math.abs(my - dragy) > 30) {
+				dragging = true;
+				offsetx -= mx - dragx;
+				offsety -= my - dragy;
+				dragx = mx;
+				dragy = my;
+			}
+		}
+	}
+	canvas.onmouseup = function(e) {
+		mousedown = false;
+	}
+	var canvasScroll = function(e) {
+		var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+		//alert(delta);
+		scale += delta * 0.1;
+		if(scale < 0.3) scale = 0.3;
+		if(scale > 2.0) scale = 2.0;
+	}
+	canvas.addEventListener("mousewheel", canvasScroll, false); // Most browsers
+	canvas.addEventListener("DOMMouseScroll", canvasScroll, false); // Firefox
 	
 	// Connect to server with Socket.IO
 	var socket = io.connect("http://localhost:5000");
@@ -67,7 +106,7 @@ function render() {
 	ctx.fillRect(0, 0, canvas.width, canvas.height);
 	
 	// Draw the map
-	map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, 200, 0, 0.8);
+	map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, offsetx, offsety, scale);
 	
 	// Draw messages
 	ctx.fillStyle = "#FF0000";

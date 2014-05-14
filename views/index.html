@@ -22,6 +22,9 @@ var scale = 1.0;
 function init() {
 	map = new Map(15, 15);
 	map.makeHexShape();
+	pls = map.dump();
+	alert(JSON.stringify(pls));
+	map.load(pls);
 
 	messages.push("Initialized.");
 	resize();

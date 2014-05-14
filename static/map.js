@@ -58,6 +58,20 @@ Map.prototype.cols = function() {
 	return this.terrain[0].length;
 };
 
+/** Dumps the map state to a simpler JavaScript object
+  * This is used to send the map over the network.
+  */
+Map.prototype.dump = function() {
+	obj = {terrain: this.terrain};
+
+	return obj;
+};
+
+/** Loads the map from a JavaScript object */
+Map.prototype.load = function(obj) {
+	this.terrain = obj.terrain;
+};
+
 /** Gets the row and column of the hexagon that contains (px, py)
   * @returns {x: column, y: row}
   */

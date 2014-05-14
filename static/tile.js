@@ -10,8 +10,8 @@ var Tile = {
 	// Contains properties for all tiles
 	properties: {
 		0: {walkable: false, color: "#000000"},
-		1: {walkable: true, color: "#DDDDDD"},
-		2: {walkable: false, color: "#888888"}
+		1: {walkable: true, color: "#4CBB17"},
+		2: {walkable: false, color: "#444444"}
 	}
 };
 

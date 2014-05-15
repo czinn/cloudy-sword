@@ -1,20 +1,20 @@
-
-    "Dwarf": {
-            "str": 7,
-            "dex": 2,
-            "hp": 20,
-			"mn": 5,
-            "iq": 3,
-            "abilities": [
-                    {
-                            "name": "thickSkin",
-                            "type": "passive",
-                            "target": "self",
-                            "range": 0,
-                            "effect": {
-                                    "type": "buff",
-                                    "xdmg": 10
-                            }
+{
+"Dwarf": {
+	"str": 7
+	"dex": 2,
+        "hp": 20,
+	"mn": 5,
+        "iq": 3,
+        "abilities": [
+		{
+                	"name": "thickSkin",
+                        "type": "passive",
+                        "target": "self",
+                        "range": 0,
+                        "effect": {
+				"type": "buff",
+				"xdmg": 10
+                         }
                     },
                     {
                             "name": "slow",
@@ -23,11 +23,11 @@
                             "range": 0,
                             "effect": {
                                     "type": "debuff"
-									"dodgeChance:" -10 
+                                    "dodgeChance:" -10 
                             }
                     }
             ]
     }
-     
+}     
      
     Format approximately like this but subject to change.

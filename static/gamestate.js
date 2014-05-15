@@ -45,27 +45,23 @@ GameState.prototype.load = function(obj) {
   */
 GameState.prototype.clearTurn = function() {
     // For now, the flip array is a list of tiles to be flipped (since that's the only action right now)
-    this.localTurn = {flip: []};
+    this.localTurn = [];
 };
 
 /** Applies the given turn object to the state
   * Used to change from one state to a new, similar state, so that the server doesn't have to resend all data
   */
 GameState.prototype.doTurn = function(obj) {
-    // Currently, for testing purposes, obj only contains obj.flip, which is a list of tiles to flip    
-    for(var i = 0; i < obj.flip.length; i++) {
-        var tile = obj.flip[i];
-        
-        if(this.map.terrain[tile.y][tile.x] != Tile.EMPTY) {
-            this.map.terrain[tile.y][tile.x]++;
-            if(this.map.terrain[tile.y][tile.x] > Tile.WATER)
-                this.map.terrain[tile.y][tile.x] = Tile.NORMAL;
-        }
+    // Obj is a list of actions to do; they are actually performed using doAction   
+    for(var i = 0; i < obj.length; i++) {
+        // Do the action without adding to localTurn
+        this.doAction(obj[i], false);
     }
 };
 
-/** Does an action; updates the game state and applies the change to localTurn */
-GameState.prototype.doAction = function(action) {
+/** Does an action; updates the game state.
+  * Adds the action to localTurn iff addLocal is not false */
+GameState.prototype.doAction = function(action, addLocal) {
     // For now, action is basically just a tile to be flipped
     var tile = action.tile;
     if(this.map.terrain[tile.y][tile.x] != Tile.EMPTY) {
@@ -73,9 +69,11 @@ GameState.prototype.doAction = function(action) {
         if(this.map.terrain[tile.y][tile.x] > Tile.WATER)
             this.map.terrain[tile.y][tile.x] = Tile.NORMAL;
     }
-        
-    // Add the tile to localTurn
-    this.localTurn.flip.push(tile);
+    
+    if(typeof addLocal === "undefined" || addLocal) {
+        // Add the tile to localTurn
+        this.localTurn.push(action);
+    }
 };
 
 if(typeof exports === "object") {

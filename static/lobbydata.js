@@ -112,6 +112,7 @@ LobbyData.prototype.clientJoinGame = function(client, gameid) {
     
     // Broadcast the updated player list
     client.socket.broadcast.to("game_" + gameid).emit("gsupdate", {players: gs.players});
+    client.socket.broadcast.to("game_" + gameid).emit("message", "IP " + addr.address + ":" + addr.port  + " has joined the game!");
     
     // Tell the client who they are playing as
     client.socket.emit("playingas", {id: playingAs});

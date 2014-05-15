@@ -44,6 +44,7 @@ io.sockets.on("connection", function(socket) {
     });
     
     socket.on("disconnect", function() {
-        console.log(addr.address + " disconnected.");
+        console.log(addr.address + ":" + addr.port + " disconnected.");
+        io.sockets.emit("message", "IP " + addr.address + ":" + addr.port + " has disconnected");
     });
 });

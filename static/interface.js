@@ -86,6 +86,9 @@ var Interface = function(canvas, gs, socket) {
     socket.on("playingas", function(data) {
         _this.playingAs = data.id;
     });
+    socket.on("message", function(data) {
+        _this.messages.push(data);
+    });
     
     /* ------------ CANVAS CALLBACKS ------------ */
     this.canvas.onclick = function(e) {
@@ -228,4 +231,8 @@ Interface.prototype.render = function() {
     for(var i = 0; i < this.messages.length; i++) {
         ctx.fillText(this.messages[i], 500, 100 + i * 30);
     }
+<<<<<<< HEAD
 };
+=======
+}
+>>>>>>> e2f334fa8133b76156d6775f4880f461e1e6d2d0

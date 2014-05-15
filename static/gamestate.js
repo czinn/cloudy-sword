@@ -56,10 +56,11 @@ GameState.prototype.doTurn = function(obj) {
     for(var i = 0; i < obj.flip.length; i++) {
         var tile = obj.flip[i];
         
-        if(this.map.terrain[tile.y][tile.x] == Tile.NORMAL)
-            this.map.terrain[tile.y][tile.x] = Tile.WALL;
-        else if(this.map.terrain[tile.y][tile.x] == Tile.WALL)
-            this.map.terrain[tile.y][tile.x] = Tile.NORMAL;
+        if(this.map.terrain[tile.y][tile.x] != Tile.EMPTY) {
+            this.map.terrain[tile.y][tile.x]++;
+            if(this.map.terrain[tile.y][tile.x] > Tile.WATER)
+                this.map.terrain[tile.y][tile.x] = Tile.NORMAL;
+        }
     }
 };
 
@@ -67,10 +68,11 @@ GameState.prototype.doTurn = function(obj) {
 GameState.prototype.doAction = function(action) {
     // For now, action is basically just a tile to be flipped
     var tile = action.tile;
-    if(this.map.terrain[tile.y][tile.x] == Tile.NORMAL)
-        this.map.terrain[tile.y][tile.x] = Tile.WALL;
-    else if(this.map.terrain[tile.y][tile.x] == Tile.WALL)
-        this.map.terrain[tile.y][tile.x] = Tile.NORMAL;
+    if(this.map.terrain[tile.y][tile.x] != Tile.EMPTY) {
+        this.map.terrain[tile.y][tile.x]++;
+        if(this.map.terrain[tile.y][tile.x] > Tile.WATER)
+            this.map.terrain[tile.y][tile.x] = Tile.NORMAL;
+    }
         
     // Add the tile to localTurn
     this.localTurn.flip.push(tile);

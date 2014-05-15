@@ -1,81 +1,127 @@
-{
-    "Dwarf": {
-        "str": 7,
-        "dex": 2,
-        "hp": 20,
-        "mn": 5,
-        "iq": 3,
-        "abilities": [{
-            "name": "thickSkin",
-            "type": "passive",
-            "target": "self",
-            "range": 0,
-            "effect": {
-                "type": "buff",
-                "xdmg": 10
-            }
-        }, {
-            "name": "slow",
-            "type": "passive",
-            "target": "self",
-            "range": 0,
-            "effect": {
-                "type": "debuff",
-                "dodgeChance": -10
-            }
-        }]
-    },
-    "Elf": {
-        "str": 5,
-        "dex": 10,
-        "hp": 10,
-        "mn": 10,
-        "iq": 7,
-        "abilities": [{
-            "name": "keenEyes",
-            "type": "passive",
-            "target": "self",
-            "range": 0,
-            "effect": {
-                "type": "buff",
-                "hitChance": 10
-            }
-        }, {
-            "name": "tangle",
-            "type": "passive",
-            "target": "self",
-            "range": 0,
-            "chance": 5,
-            "effect": {
-                "type": "debuff",
-                "rof": -25
-            }
-        }]
-    },
-    "Gnome": {
-        "str": 4,
-        "dex": 4,
-        "hp": 10,
-        "mn": 15,
-        "iq": 10,
-        "abilities": [{
-            "name": "short",
-            "type": "passive",
-            "target": "self",
-            "range": 0,
-            "effect": {
-                "type": "buff",
-                "dodgeChance": 10
-            }
-        }, {
-            "name": "short",
-            "type": "passive",
-            "target": "self",
-            "range": 0,
-            "effect": {
-                "type": "debuff",
-                "xdmg": 4
-            }
-        }]
-    }
+{"Dwarf": {
+    "str": 7,
+    "dex": 2,
+    "hp": 20,
+    "mn": 5,
+    "iq": 3,
+    "abilities": [{
+        "name": "thickSkin",
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "effect": {
+            "type": "buff",
+            "xdmg": 10
+        }
+    }, {
+        "name": "slow",
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "effect": {
+            "type": "debuff",
+            "dodgeChance": -10
+        }
+    }]
+},
+"Elf": {
+    "str": 5,
+    "dex": 10,
+    "hp": 10,
+    "mn": 10,
+    "iq": 7,
+    "abilities": [{
+        "name": "keenEyes",
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "effect": {
+            "type": "buff",
+            "hitChance": 10
+        }
+    }, {
+        "name": "tangle", // The Elf's long hair gets tangled in his quiver of arrows, hurting his ROF but making him to more damage in his rage
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "chance": 5,
+        "effect": {
+            "type": "debuff",
+            "rof": -25 "xdmg": 10
+        }
+    }]
+},
+"Gnome": {
+    "str": 4,
+    "dex": 4,
+    "hp": 10,
+    "mn": 15,
+    "iq": 10,
+    "abilities": [{
+        "name": "short",
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "effect": {
+            "type": "buff",
+            "dodgeChance": 10
+        }
+    }, {
+        "name": "short",
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "effect": {
+            "type": "debuff",
+            "xdmg": 4
+        }
+    }]
+},
+"Human": {
+    "str": 6,
+    "dex": 6,
+    "hp": 15,
+    "mn": 7,
+    "iq": 7,
+    "abilities": [{
+        "name": "adaptable"
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "effect": {
+            "type": "buff",
+            "dodgeChance": 10,
+            "hitChance": 5
+        }
+    }, {
+        "name": "egotistic"
+        "type": "passive",
+        "target": "self",
+        "range": 0,
+        "effect": {
+            "type": "debuff",
+            "teamBuffx": -15 // takes a 15% loss on benefits from team's buffs 
+        }
+    }]
 }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

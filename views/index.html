@@ -6,135 +6,31 @@
 <script src="/static/tile.js"></script>
 <script src="/static/map.js"></script>
 <script src="/static/gamestate.js"></script>
+<script src="/static/interface.js"></script>
 <script>
 
 var FPS = 30;
 
-var messages = [];
+var ui; // The interface
 
 var gs; // The local GameState
 
-// Dragging and scaling variables
-// This needs to be cleaned up at some point
-var dragx = 0, dragy = 0, dragging = false, mousedown = false;
-var offsetx = 200, offsety = 0;
-var scale = 1.0;
-
 function init() {
+	// Create the game state
 	gs = new GameState(2);
-
-	messages.push("Initialized.");
-	resize();
-	render();
 	
 	// Connect to server with Socket.IO
 	var socket = io.connect("http://localhost:5000");
-	socket.on("connecting", function() {
-		messages.push("Connecting to server...");
-	});
-	var pingtime = 0;
-	socket.on("connect", function() {
-		messages.push("Connected. Sending ping event...");
-		pingtime = new Date().getTime();
-		socket.emit("ping", {msg: "Everything works!"});
-	});
-	socket.on("pong", function(data) {
-		messages.push("Received pong event: " + data.msg);
-		messages.push("Ping time: " + (new Date().getTime() - pingtime) + "ms.");
-	});
-	socket.on("disconnect", function() {
-		messages.push("Disconnected from the server.");
-	});
-	socket.on("fullgs", function(data) {
-		// Update the entire game state
-		gs.load(data);
-	});
-	socket.on("turn", function(data) {
-		// Update with the turn data
-		gs.doTurn(data);
-	});
 	
-	// Set up the canvas
+	// Create the interface
 	var canvas = document.getElementById("canvas");
-	canvas.onclick = function(e) {
-		var mx = e.pageX - e.target.offsetLeft;
-		var my = e.pageY - e.target.offsetTop;
-		if(!dragging) {
-			var tile = gs.map.hexAtTransformed(mx, my, 10, 10, offsetx, offsety, scale);
-			if(tile.x >= 0 && tile.x < gs.map.cols() && tile.y >= 0 && tile.y < gs.map.rows()) {
-				// Flip the tile using the game state method
-				gs.doAction({tile: tile});
-				// Immediately send the turn to the server (not how it will actually work, just temp)
-				socket.emit("turn", gs.localTurn);
-				gs.clearTurn();
-			}
-		}
-	};
-	canvas.onmousedown = function(e) {
-		dragx = e.pageX - e.target.offsetLeft;
-		dragy = e.pageY - e.target.offsetTop;
-		mousedown = true;
-		dragging = false;
-	}
-	canvas.onmousemove = function(e) {
-		if(mousedown) {
-			var mx = e.pageX - e.target.offsetLeft;
-			var my = e.pageY - e.target.offsetTop;
-			if(dragging || Math.abs(mx - dragx) > 30 || Math.abs(my - dragy) > 30) {
-				dragging = true;
-				offsetx -= mx - dragx;
-				offsety -= my - dragy;
-				dragx = mx;
-				dragy = my;
-			}
-		}
-	}
-	canvas.onmouseup = function(e) {
-		mousedown = false;
-	}
-	var canvasScroll = function(e) {
-		var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
-		//alert(delta);
-		scale += delta * 0.1;
-		if(scale < 0.3) scale = 0.3;
-		if(scale > 2.0) scale = 2.0;
-	}
-	canvas.addEventListener("mousewheel", canvasScroll, false); // Most browsers
-	canvas.addEventListener("DOMMouseScroll", canvasScroll, false); // Firefox
+	ui = new Interface(canvas, gs, socket);
 	
 	// Start render timer
-	setInterval(render, 1000 / FPS);
-}
-
-function render() {
-	// Get the canvas context object
-	var canvas = document.getElementById("canvas");
-	var ctx = canvas.getContext("2d");
-	
-	// Clear the canvas with a black background
-	ctx.fillStyle = "#000000";
-	ctx.fillRect(0, 0, canvas.width, canvas.height);
-	
-	// Draw the map
-	gs.map.render(ctx, 10, 10, canvas.width - 10, canvas.height - 10, offsetx, offsety, scale);
-	
-	// Draw messages
-	ctx.fillStyle = "#FF0000";
-	ctx.font = "20px Arial";
-	for(var i = 0; i < messages.length; i++) {
-		ctx.fillText(messages[i], 300, 100 + i * 30);
-	}
-}
-
-function resize() {
-	var canvas = document.getElementById("canvas");
-	canvas.width = window.innerWidth;
-	canvas.height = window.innerHeight;
-	render();
+	setInterval(function() { ui.render(); }, 1000 / FPS);
 }
 
 window.onload = init;
-window.onresize = resize;
 
 </script>
 </head>

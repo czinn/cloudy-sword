@@ -29,3 +29,38 @@
             ]
     }
 }     
+
+{
+	
+    "Elf": {
+            "str": 5,
+            "dex": 10,
+            "hp": 10,
+            "mn": 10,
+            "iq": 7,
+            "abilities": [
+                    {
+                            "name": "keenEyes",
+                            "type": "passive",
+                            "target": "self",
+                            "range": 0,
+                            "effect": {
+                                    "type": "buff",
+                                    "hitChance":10
+                            }
+                    },
+                    {
+                            "name": "tangle",
+                            "type": "passive",
+                            "target": "self",
+                            "range": 0,
+			    "chance": 5
+                            "effect": {
+                                    "type": "debuff",
+		                    "rof": -25
+                            }
+                    }
+            ]
+    }
+     
+}

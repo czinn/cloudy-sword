@@ -30,7 +30,8 @@ var io = socketio.listen(server, {log: false});
 
 // Set up Socket.IO connection handler
 io.sockets.on("connection", function(socket) {
-	console.log("A client connected with Socket.IO");
+    var addr = socket.handshake.address;
+	console.log("A client connected from " + addr.address + ":" + addr.port);
 	
 	socket.emit("fullgs", gs.dump()); // send the client the full game state
 	
@@ -45,4 +46,8 @@ io.sockets.on("connection", function(socket) {
 		// Send out the update to everyone else
 		socket.broadcast.emit("turn", data);
 	});
+    
+    socket.on("disconnect", function() {
+        console.log(addr.address + " disconnected.");
+    });
 });

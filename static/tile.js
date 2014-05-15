@@ -12,8 +12,8 @@ var Tile = {
 	properties: {
 		0: {walkable: false, color: "#000000"},
 		1: {walkable: true, color: "#4CBB17"},
-		2: {walkable: false, color: "#444444"}
-		3: {walkable: true. color: "#1A6CD2"}
+		2: {walkable: false, color: "#444444"},
+		3: {walkable: true, color: "#1A6CD2"}
 	}
 };
 

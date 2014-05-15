@@ -1,6 +1,6 @@
 {
 "Dwarf": {
-	"str": 7
+	"str": 7,
 	"dex": 2,
         "hp": 20,
 	"mn": 5,
@@ -22,12 +22,10 @@
                             "target": "self",
                             "range": 0,
                             "effect": {
-                                    "type": "debuff"
-                                    "dodgeChance:" -10 
+                                    "type": "debuff",
+                             "dodgeChance": -10 
                             }
                     }
             ]
     }
 }     
-     
-    Format approximately like this but subject to change.

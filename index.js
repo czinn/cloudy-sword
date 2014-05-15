@@ -32,7 +32,7 @@ var io = socketio.listen(server, {log: false});
 io.sockets.on("connection", function(socket) {
     var addr = socket.handshake.address;
     console.log("A client connected from " + addr.address + ":" + addr.port);
-    
+    io.sockets.emit("message", "IP " + addr.address + ":" + addr.port  + " has joined!");
     socket.emit("fullgs", gs.dump()); // send the client the full game state
     
     // Set up Socket.IO event callbacks here
@@ -48,6 +48,7 @@ io.sockets.on("connection", function(socket) {
     });
     
     socket.on("disconnect", function() {
-        console.log(addr.address + " disconnected.");
+        console.log(addr.address + ":" + addr.port + " disconnected.");
+        io.sockets.emit("message", "IP " + addr.address + ":" + addr.port + " has disconnected");
     });
 });

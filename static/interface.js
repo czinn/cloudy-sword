@@ -56,6 +56,9 @@ var Interface = function(canvas, gs, socket) {
         // Update with the turn data
         _this.gs.doTurn(data);
     });
+    socket.on("message", function(data) {
+        _this.messages.push(data);
+    });
     
     /* ------------ CANVAS CALLBACKS ------------ */
     this.canvas.onclick = function(e) {

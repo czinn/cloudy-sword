@@ -112,6 +112,7 @@ LobbyData.prototype.clientJoinGame = function(client, gameid) {
     
     // Broadcast the updated player list
     client.socket.broadcast.to("game_" + gameid).emit("gsupdate", {players: gs.players});
+    var addr = client.socket.handshake.address;
     client.socket.broadcast.to("game_" + gameid).emit("message", "IP " + addr.address + ":" + addr.port  + " has joined the game!");
     
     // Tell the client who they are playing as
@@ -138,6 +139,9 @@ LobbyData.prototype.clientLeaveGame = function(client) {
     // Remove the client from their current Socket.IO room
     client.socket.leave("game_" + client.currentGame);
     client.socket.join("lobby");
+    client.socket.broadcast.to("game_" + client.currentGame).emit("gsupdate", {players: gs.players});
+    var addr = client.socket.handshake.address;
+    client.socket.broadcast.to("game_" + client.currentGame).emit("message", "IP " + addr.address + ":" + addr.port + " has disconnected");
     
     // Broadcast the updated game summary to everyone in the lobby, and themselves
     var change = {};

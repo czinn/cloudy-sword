@@ -16,18 +16,18 @@ var ui; // The interface
 var gs; // The local GameState
 
 function init() {
-	// Create the game state
-	gs = new GameState(2);
-	
-	// Connect to server with Socket.IO
-	var socket = io.connect("http://localhost:5000");
-	
-	// Create the interface
-	var canvas = document.getElementById("canvas");
-	ui = new Interface(canvas, gs, socket);
-	
-	// Start render timer
-	setInterval(function() { ui.render(); }, 1000 / FPS);
+    // Create the game state
+    gs = new GameState(2);
+    
+    // Connect to server with Socket.IO
+    var socket = io.connect("http://localhost:5000");
+    
+    // Create the interface
+    var canvas = document.getElementById("canvas");
+    ui = new Interface(canvas, gs, socket);
+    
+    // Start render timer
+    setInterval(function() { ui.render(); }, 1000 / FPS);
 }
 
 window.onload = init;
@@ -36,6 +36,6 @@ window.onload = init;
 </head>
 
 <body>
-	<canvas id = "canvas"> Your browser does not support canvas.</canvas>
+    <canvas id = "canvas"> Your browser does not support canvas.</canvas>
 </body>
 </html>

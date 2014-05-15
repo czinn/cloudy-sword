@@ -1,0 +1,33 @@
+
+    "Gnome": {
+            "str": 4,
+            "dex": 4,
+            "hp": 10,
+			"mn": 15,
+            "iq": 10,
+            "abilities": [
+                    {
+                            "name": "short",
+                            "type": "passive",
+                            "target": "self",
+                            "range": 0,
+                            "effect": {
+                                    "type": "buff",
+                                    "dodgeChance": 10
+                            }
+                    },
+                    {
+                            "name": "short",
+                            "type": "passive",
+                            "target": "self",
+                            "range": 0,
+                            "effect": {
+                                    "type": "debuff"
+									"xdmg": 4
+                            }
+                    }
+            ]
+    }
+     
+     
+    Format approximately like this but subject to change.

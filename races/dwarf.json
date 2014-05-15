@@ -1,20 +1,20 @@
-
-    "Dwarf": {
-            "str": 7,
-            "dex": 2,
-            "hp": 20,
-			"mn": 5,
-            "iq": 3,
-            "abilities": [
-                    {
-                            "name": "thickSkin",
-                            "type": "passive",
-                            "target": "self",
-                            "range": 0,
-                            "effect": {
-                                    "type": "buff",
-                                    "xdmg": 10
-                            }
+{
+"Dwarf": {
+	"str": 7,
+	"dex": 2,
+        "hp": 20,
+	"mn": 5,
+        "iq": 3,
+        "abilities": [
+		{
+                	"name": "thickSkin",
+                        "type": "passive",
+                        "target": "self",
+                        "range": 0,
+                        "effect": {
+				"type": "buff",
+				"xdmg": 10
+                         }
                     },
                     {
                             "name": "slow",
@@ -22,12 +22,45 @@
                             "target": "self",
                             "range": 0,
                             "effect": {
-                                    "type": "debuff"
-									"dodgeChance:" -10 
+                                    "type": "debuff",
+                             "dodgeChance": -10 
+                            }
+                    }
+            ]
+    }
+}     
+
+{
+	
+    "Elf": {
+            "str": 5,
+            "dex": 10,
+            "hp": 10,
+            "mn": 10,
+            "iq": 7,
+            "abilities": [
+                    {
+                            "name": "keenEyes",
+                            "type": "passive",
+                            "target": "self",
+                            "range": 0,
+                            "effect": {
+                                    "type": "buff",
+                                    "hitChance":10
+                            }
+                    },
+                    {
+                            "name": "tangle",
+                            "type": "passive",
+                            "target": "self",
+                            "range": 0,
+			    "chance": 5
+                            "effect": {
+                                    "type": "debuff",
+		                    "rof": -25
                             }
                     }
             ]
     }
      
-     
-    Format approximately like this but subject to change.
+}

@@ -38,7 +38,10 @@ LobbyData.prototype.gameExists = function(gameId) {
   * Right now the settings do nothing!
   */
 LobbyData.prototype.addGame = function(settings) {
-    this.gamestates[this.gameIdCounter] = new GameState(settings.players, settings.rows, settings.columns);
+    if(typeof settings.players === "undefined") settings.players = 2;
+    if(typeof settings.rows === "undefined") settings.rows = 15;
+    if(typeof settings.cols === "undefined") settings.cols = 15;
+    this.gamestates[this.gameIdCounter] = new GameState(settings.players, settings.rows, settings.cols);
     
     this.gameIdCounter++;
 };

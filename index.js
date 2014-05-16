@@ -15,7 +15,7 @@ app.use(favicon(__dirname + "/static/favicon.ico"));
 // Create a lobby data object
 var lobby = new LobbyData();
 // Create some games in it
-lobby.addGame({});
+lobby.addGame({rows: 25, cols: 25});
 lobby.addGame({});
 
 /* ------------ APPLICATION PAGES ------------ */

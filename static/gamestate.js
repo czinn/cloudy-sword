@@ -17,25 +17,84 @@ var GameState = function(players) {
     this.map = new Map(15, 15);
     this.map.makeHexShape();
     
+    this.players = []; // A list of players in the game
+    
     this.numPlayers = players;
     
     this.clearTurn();
-}
+};
+
+/** Counts the number of players currently in the game */
+GameState.prototype.playersInGame = function() {
+    var count = 0;
+    for(var i = 0; i < this.players.length; i++) {
+        if(this.players[i] != -1) count++;
+    }
+    return count;
+};
+
+/** Adds the given player
+  * Returns true if successful, false if the game was full
+  */
+GameState.prototype.addPlayer = function(id) {
+    if(this.players.length < this.numPlayers) {
+        this.players.push(id);
+        return this.players.length - 1;
+    }
+    for(var i = 0; i < this.players.length; i++) {
+        if(this.players[i] == -1) { //empty player slot
+            this.players[i] = id;
+            return i;
+        }
+    }
+    return -1;
+};
+
+/** Removes the player with the given id */
+GameState.prototype.removePlayer = function(id) {
+    for(var i = 0; i < this.players.length; i++) {
+        if(this.players[i] == id) {
+            this.players[i] = -1;
+            break;
+        }
+    }
+};
+
+/** Checks whether the given player is in the game */
+GameState.prototype.hasPlayer = function(id) {
+    for(var i = 0; i < this.players.length; i++) {
+        if(this.players[i] == id)
+            return true;
+    }
+    return false;
+};
 
 /** Dumps the game state to a simpler JavaScript object
   * This is used to send the state over the network.
   */
 GameState.prototype.dump = function() {
-    obj = {numPlayers: this.numPlayers, map: this.map};
+    obj = {numPlayers: this.numPlayers, map: this.map, players: this.players};
 
     return obj;
 };
 
 /** Loads the game state from a JavaScript object */
 GameState.prototype.load = function(obj) {
-    this.numPlayers = obj.players;
+    this.numPlayers = obj.numPlayers;
+    
+    this.players = obj.players;
+    
     this.map = new Map(1, 1);
     this.map.load(obj.map);
+};
+
+/** Updates the game state based on properties of update object
+  * Different from doTurn in that it does non-game related stuff, like updating the players in the game.
+  */
+GameState.prototype.update = function(obj) {
+    if("players" in obj) {
+        this.players = obj.players;
+    }
 };
 
 /** Clears the local turn.
@@ -74,6 +133,15 @@ GameState.prototype.doAction = function(action, addLocal) {
         // Add the tile to localTurn
         this.localTurn.push(action);
     }
+};
+
+/** Gets a summary of information about the game for display in the lobby */
+GameState.prototype.summary = function() {
+    return {
+        numPlayers: this.numPlayers,
+        players: this.playersInGame(),
+        mapsize: this.map.cols() + " x " + this.map.rows(),
+    };
 };
 
 if(typeof exports === "object") {

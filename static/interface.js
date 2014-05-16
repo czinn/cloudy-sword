@@ -279,13 +279,6 @@ Interface.prototype.render = function() {
         // Draw the map
         this.renderMap(ctx, 10, 10, this.canvas.width - 10, this.canvas.height - 10, this.offsetx, this.offsety, this.scale);
         
-        // Draw selector
-        /*var selPos = this.gs.map.getHexLocation(this.selectedTile.x, this.selectedTile.y, 10, 10, this.canvas.width - 10, this.canvas.height - 10, this.offsetx, this.offsety, this.scale);
-        var h = HEX_HEIGHT * this.scale;
-        var w = Math.round(Math.sqrt(3) / 2 * h);
-        ctx.fillStyle = "#FF0000";
-        ctx.fillRect(selPos.x + w / 2 - 5, selPos.y + h / 2 - 5, 10, 10);*/
-        
         // Indicate what playingAs is
         ctx.fillStyle = "#DDDDDD";
         if(this.playingAs != -1) {

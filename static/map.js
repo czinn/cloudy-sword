@@ -17,12 +17,50 @@ var HEX_HEIGHT = 200; //pixels
 var Map = function(rows, cols) {
     //Create an normal terrain instead of empty for testing
     this.terrain = [];
+
     for(var row = 0; row < rows; row++) {
         this.terrain[row] = [];
         for(var col = 0; col < cols; col++) {
             this.terrain[row][col] = Math.random() > 0.2 ? Tile.NORMAL : Tile.WALL
         }
+        //River generation
+        //Currently dirty, simple and random
+        //River starting row, and column
+        var river_row = Math.floor(Math.random() * rows);
+        var river_column = 0;
+
+        //Last move
+        var river_last_move = "right";
+        while (0 <= river_row && river_row < rows && 0 <= river_column && river_column < cols) {
+          this.terrain[river_row][river_column] = Tile.WATER;
+
+          switch (Math.floor(Math.random()*6)){
+            case 0:
+              river_row -= 1;
+              break;
+            case 1:
+              river_row -= 1;
+              river_column += 1;
+              break;
+            case 2:
+              river_column += 1;
+              break;
+            case 3:
+              river_row += 1;
+              break;
+            case 4:
+              river_row += 1;
+              river_column -= 1;
+              break;
+            case 5:
+              river_column += 1;
+              break;
+          }
+        }
     }
+
+
+
 }
 
 /** Calculates the distance between the given hexes

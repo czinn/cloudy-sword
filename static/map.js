@@ -8,9 +8,6 @@ if(typeof exports === "object") {
     var Tile = require("./tile.js");
 }
 
-// Declare constants
-var HEX_HEIGHT = 200; //pixels
-
 /** Constructor for a map object.
   * Creates an empty map of the specified dimensions.
   */
@@ -205,7 +202,7 @@ Map.prototype.render = function(ctx, x, y, width, height, offsetx, offsety, scal
             var hexy = (r * 3 / 4) * h - offsety;
             
             // Check if the hexagon is in the window
-            if(hexx + offsetx >= 0 && hexx <= width && hexy + offsety >= 0 && hexy <= height) {
+            if(hexx + w >= 0 && hexx <= width && hexy + h >= 0 && hexy <= height) {
                 // Set color
                 var color = Tile.properties[this.terrain[r][c]].color;
                 ctx.fillStyle = color;
@@ -225,6 +222,19 @@ Map.prototype.render = function(ctx, x, y, width, height, offsetx, offsety, scal
             }
         }
     }
+};
+
+Map.prototype.getHexLocation = function(c, r, x, y, width, height, offsetx, offsety, scale) {
+    // Set defaults
+    offsetx = typeof offsetx !== "undefined" ? offsetx : 0;
+    offsety = typeof offsety !== "undefined" ? offsety : 0;
+    scale = typeof scale !== "undefined" ? scale : 1.0;
+    
+    // Calculate the width and height of each hexagon
+    var h = HEX_HEIGHT * scale;
+    var w = Math.round(Math.sqrt(3) / 2 * h);
+    
+    return {x: x + (c + r / 2) * w - offsetx, y: y + (r * 3 / 4) * h - offsety};
 };
 
 if(typeof exports === "object") {

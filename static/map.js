@@ -28,15 +28,16 @@ var Map = function(rows, cols) {
     //Basic River generation
     //Currently dirty, simple and random
     //River starting row, and column
-    var river_row = Math.floor(Math.random() * rows);
+    var river_row = Math.floor(Math.random() * (rows - 4)) + 2;
     var river_column = 0;
 
     var river_randomizer = 0;
     //River movement, gives river general sense of direction. This number will change with more river starting locations.
-    var river_move = 3;
+    var river_move = 2;
 
 
     while (0 <= river_row && river_row < rows && 0 <= river_column && river_column < cols) {
+      
       if (this.terrain[river_row][river_column] == Tile.WATER) {
         break;
       }
@@ -45,16 +46,16 @@ var Map = function(rows, cols) {
 
       river_randomizer = (Math.floor(Math.random() * 1000));
 
-      if (river_randomizer > 980) {
+      if (river_randomizer > 990) {
         river_move = (river_move + 4) % 6;
       }
-      else if (river_randomizer > 960) {
+      else if (river_randomizer > 980) {
         river_move = (river_move + 2) % 6;
       }
-      else if (river_randomizer > 760) {
+      else if (river_randomizer > 740) {
         river_move = (river_move + 5) % 6;
       }
-      else if (river_randomizer > 560) {
+      else if (river_randomizer > 520) {
         river_move = (river_move + 1) % 6;
       }
 

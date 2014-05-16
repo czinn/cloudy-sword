@@ -25,7 +25,7 @@ var Map = function(rows, cols) {
         }
 
     }
-    //River generation
+    //Basic River generation
     //Currently dirty, simple and random
     //River starting row, and column
     var river_row = Math.floor(Math.random() * rows);

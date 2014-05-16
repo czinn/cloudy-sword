@@ -44,18 +44,18 @@ var Map = function(rows, cols) {
 
       this.terrain[river_row][river_column] = Tile.WATER
 
-      river_randomizer = (Math.floor(Math.random() * 1000));
+      river_randomizer = (Math.floor(Math.random() * 100));
 
-      if (river_randomizer > 990) {
+      if (river_randomizer > 99) {
         river_move = (river_move + 4) % 6;
       }
-      else if (river_randomizer > 980) {
+      else if (river_randomizer > 98) {
         river_move = (river_move + 2) % 6;
       }
-      else if (river_randomizer > 740) {
+      else if (river_randomizer > 74) {
         river_move = (river_move + 5) % 6;
       }
-      else if (river_randomizer > 520) {
+      else if (river_randomizer > 52) {
         river_move = (river_move + 1) % 6;
       }
 

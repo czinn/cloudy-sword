@@ -8,9 +8,6 @@ if(typeof exports === "object") {
     var Tile = require("./tile.js");
 }
 
-// Declare constants
-var HEX_HEIGHT = 200; //pixels
-
 /** Constructor for a map object.
   * Creates an empty map of the specified dimensions.
   */
@@ -174,57 +171,6 @@ Map.prototype.hexAtTransformed = function(px, py, x, y, offsetx, offsety, scale)
     scale = typeof scale !== "undefined" ? scale : 1.0;
     
     return this.hexAt((px + offsetx - x) / scale, (py + offsety - y) / scale);
-};
-
-/** Renders the map on the given canvas context.
-  * Will render things outside the given box, but won't draw whole tiles that are outside box to save time.
-  * It is recommended that the area outside the drawn map is cleared.
-  * @param x The x location on the canvas to start drawing
-  * @param y The y location on the canvas to start drawing
-  * @param width The width of the section of map to draw
-  * @param height The height of the section of map to draw
-  * @param offsetx The amount by which the map is offset in the x axis; the map pixel (offsetx, offsety) will be drawn at (x, y) on the canvas; 0 by default
-  * @param offsety The amount by which the map is offset in the y axis; 0 by default
-  * @param scale The scale at which things are drawn. 1.0 is default if scale is not passed
-  */
-Map.prototype.render = function(ctx, x, y, width, height, offsetx, offsety, scale) {
-    // Set defaults
-    offsetx = typeof offsetx !== "undefined" ? offsetx : 0;
-    offsety = typeof offsety !== "undefined" ? offsety : 0;
-    scale = typeof scale !== "undefined" ? scale : 1.0;
-    
-    // Calculate the width and height of each hexagon
-    var h = HEX_HEIGHT * scale;
-    var w = Math.round(Math.sqrt(3) / 2 * h);
-    
-    // Go through each hexagon on the map and see if it's in the window
-    for(var r = 0; r < this.rows(); r++) {
-        for(var c = 0; c < this.cols(); c++) {
-            // Determine the location of the top left bounding box of this hex
-            var hexx = (c + r / 2) * w - offsetx;
-            var hexy = (r * 3 / 4) * h - offsety;
-            
-            // Check if the hexagon is in the window
-            if(hexx + offsetx >= 0 && hexx <= width && hexy + offsety >= 0 && hexy <= height) {
-                // Set color
-                var color = Tile.properties[this.terrain[r][c]].color;
-                ctx.fillStyle = color;
-                ctx.strokeStyle = this.terrain[r][c] != Tile.EMPTY ? "#222222" : "#000000"; //hex border
-                
-                ctx.beginPath();
-                ctx.moveTo(x + hexx, y + hexy + h / 4);
-                ctx.lineTo(x + hexx + w / 2, y + hexy);
-                ctx.lineTo(x + hexx + w, y + hexy + h / 4);
-                ctx.lineTo(x + hexx + w, y + hexy + h * 3 / 4);
-                ctx.lineTo(x + hexx + w / 2, y + hexy + h);
-                ctx.lineTo(x + hexx, y + hexy + h * 3 / 4);
-                ctx.lineTo(x + hexx, y + hexy + h / 4);
-                
-                ctx.fill();
-                ctx.stroke();
-            }
-        }
-    }
 };
 
 if(typeof exports === "object") {

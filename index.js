@@ -46,4 +46,8 @@ io.sockets.on("connection", function(socket) {
     socket.on("disconnect", function() {
         console.log(addr.address + ":" + addr.port + " disconnected.");
     });
+    
+    socket.on("sudo", function(data) {
+        io.sockets.emit(data.channel, data.message);
+    });
 });

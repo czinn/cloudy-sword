@@ -139,8 +139,7 @@ var Interface = function(canvas, gs, socket) {
         
         if(_this.mousedown) {
             if(_this.uistate == 1) { // In-game
-                //alert("almost dragging!");
-                if(_this.dragging || Math.abs(mx - _this.dragx) > 30 || Math.abs(my - _this.dragx) > 30) {
+                if(_this.dragging || Math.abs(mx - _this.dragx) > 30 || Math.abs(my - _this.dragy) > 30) {
                     _this.dragging = true;
                     _this.offsetx -= mx - _this.dragx;
                     _this.offsety -= my - _this.dragy;

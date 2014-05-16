@@ -12,9 +12,9 @@ if(typeof exports === "object") {
 }
   
 /** Creates a new game state object for the given number of players */
-var GameState = function(players) {
+var GameState = function(players, rows, columns) {
     // Create a new map and make it a hexagon
-    this.map = new Map(15, 15);
+    this.map = new Map(rows, columns);
     this.map.makeHexShape();
     
     this.players = []; // A list of players in the game

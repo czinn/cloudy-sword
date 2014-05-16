@@ -17,73 +17,12 @@ var HEX_HEIGHT = 200; //pixels
 var Map = function(rows, cols) {
     //Create an normal terrain instead of empty for testing
     this.terrain = [];
-
     for(var row = 0; row < rows; row++) {
         this.terrain[row] = [];
         for(var col = 0; col < cols; col++) {
             this.terrain[row][col] = Math.random() > 0.2 ? Tile.NORMAL : Tile.WALL
         }
-
     }
-    //Basic River generation
-    //Currently dirty, simple and random
-    //River starting row, and column
-    var river_row = Math.floor(Math.random() * (rows - 4)) + 2;
-    var river_column = 0;
-
-    var river_randomizer = 0;
-    //River movement, gives river general sense of direction. This number will change with more river starting locations.
-    var river_move = 2;
-
-
-    while (0 <= river_row && river_row < rows && 0 <= river_column && river_column < cols) {
-      
-      if (this.terrain[river_row][river_column] == Tile.WATER) {
-        break;
-      }
-
-      this.terrain[river_row][river_column] = Tile.WATER
-
-      river_randomizer = (Math.floor(Math.random() * 1000));
-
-      if (river_randomizer > 990) {
-        river_move = (river_move + 4) % 6;
-      }
-      else if (river_randomizer > 980) {
-        river_move = (river_move + 2) % 6;
-      }
-      else if (river_randomizer > 740) {
-        river_move = (river_move + 5) % 6;
-      }
-      else if (river_randomizer > 520) {
-        river_move = (river_move + 1) % 6;
-      }
-
-      switch (river_move){
-        case 0:
-          river_row -= 1;
-          break;
-        case 1:
-          river_row -= 1;
-          river_column += 1;
-          break;
-        case 2:
-          river_column += 1;
-          break;
-        case 3:
-          river_row += 1;
-          break;
-        case 4:
-          river_row += 1;
-          river_column -= 1;
-          break;
-        case 5:
-          river_column += 1;
-          break;
-      }
-    }
-
-
 }
 
 /** Calculates the distance between the given hexes

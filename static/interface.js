@@ -6,6 +6,7 @@
 
 // Declare constants
 var HEX_HEIGHT = 200; //pixels
+var PLAYER_COLORS = ["#FF0000", "#0000FF", "#00FF00", "#FF00FF"]; // Colours for the different players
   
 /** Creates the interface object.
   * Needs a reference to the canvas to set up click handlers.
@@ -174,28 +175,37 @@ var Interface = function(canvas, gs, socket) {
 		var key = e.keyCode || e.which;
         
         if(_this.uistate == 1) { // In-game
-            if(key == 119) { // W
-                _this.moveSelected(0, -1);
-            }
-            if(key == 101) { // E
-                _this.moveSelected(1, -1);
-            }
-            if(key == 97) { //A
-                _this.moveSelected(-1, 0);
-            }
-            if(key == 115) { //S
-                if(_this.selectedTile.x != -1) {
-                    _this.clickTile(_this.selectedTile);
+            // Get the unit at the cursor
+            var unit = _this.gs.map.tileUnit(_this.selectedTile);
+            var tile = {x: _this.selectedTile.x, y: _this.selectedTile.y};
+            if(unit != null && unit.controller == _this.playingAs) {
+                if(key == 119) { // W
+                    _this.gs.doAction({tile: tile, dir: {x: 0, y: -1}});
+                    _this.moveSelected(0, -1);
                 }
-            }
-            if(key == 100) { //D
-                _this.moveSelected(1, 0);
-            }
-            if(key == 122) { //Z
-                _this.moveSelected(-1, 1);
-            }
-            if(key == 120) { //X
-                _this.moveSelected(0, 1);
+                if(key == 101) { // E
+                    _this.gs.doAction({tile: tile, dir: {x: 1, y: -1}});
+                    _this.moveSelected(1, -1);
+                }
+                if(key == 97) { //A
+                    _this.gs.doAction({tile: tile, dir: {x: -1, y: 0}});
+                    _this.moveSelected(-1, 0);
+                }
+                if(key == 100) { //D
+                    _this.gs.doAction({tile: tile, dir: {x: 1, y: 0}});
+                    _this.moveSelected(1, 0);
+                }
+                if(key == 122) { //Z
+                    _this.gs.doAction({tile: tile, dir: {x: -1, y: 1}});
+                    _this.moveSelected(-1, 1);
+                }
+                if(key == 120) { //X
+                    _this.gs.doAction({tile: tile, dir: {x: 0, y: 1}});
+                    _this.moveSelected(0, 1);
+                }
+                // Immediately send the turn to the server (just temp)
+                _this.socket.emit("turn", gs.localTurn);
+                _this.gs.clearTurn();
             }
         }
         
@@ -212,15 +222,6 @@ var Interface = function(canvas, gs, socket) {
   */
 Interface.prototype.clickTile = function(tile) {
     if(this.uistate == 1) { // In-game
-        if(this.playingAs != -1) { // Not a spectator
-            if(this.selectedTile.x == tile.x && this.selectedTile.y == tile.y) {
-                // Flip the tile using the game state method
-                this.gs.doAction({tile: tile});
-                // Immediately send the turn to the server (not how it will actually work, just temp)
-                this.socket.emit("turn", gs.localTurn);
-                this.gs.clearTurn();
-            }
-        }
         this.selectedTile = tile;
     }
 };
@@ -335,6 +336,15 @@ Interface.prototype.renderMap = function(ctx) {
                 
                 ctx.fill();
                 ctx.stroke();
+                
+                // Draw unit
+                var unit = map.tileUnit({x: c, y: r});
+                if(unit != null) {
+                    ctx.fillStyle = PLAYER_COLORS[unit.controller];
+                    ctx.beginPath();
+                    ctx.arc(x + hexx + w / 2, y + hexy + h / 2, w / 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
     }

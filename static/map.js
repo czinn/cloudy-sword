@@ -12,16 +12,22 @@ if(typeof exports === "object") {
   * Creates an empty map of the specified dimensions.
   */
 var Map = function(rows, cols) {
-    //Create an normal terrain instead of empty for testing
+    // Create an normal terrain instead of empty for testing
     this.terrain = [];
 
     for(var row = 0; row < rows; row++) {
         this.terrain[row] = [];
         for(var col = 0; col < cols; col++) {
-            this.terrain[row][col] = Math.random() > 0.2 ? Tile.NORMAL : Tile.WALL
+            this.terrain[row][col] = Tile.NORMAL;
         }
-
     }
+    
+    // Create array to hold units
+    this.units = [];
+    
+    
+    
+    
     //Basic River generation
     //Currently dirty, simple and random
     //River starting row, and column
@@ -79,8 +85,6 @@ var Map = function(rows, cols) {
           break;
       }
     }
-
-
 }
 
 /** Calculates the distance between the given hexes
@@ -120,6 +124,11 @@ Map.prototype.cols = function() {
   */
 Map.prototype.dump = function() {
     obj = {terrain: this.terrain};
+    
+    obj.units = [];
+    for(var i = 0; i < this.units.length; i++) {
+        obj.units.push(this.units[i].dump());
+    }
 
     return obj;
 };
@@ -127,6 +136,34 @@ Map.prototype.dump = function() {
 /** Loads the map from a JavaScript object */
 Map.prototype.load = function(obj) {
     this.terrain = obj.terrain;
+    
+    this.units = [];
+    for(var i = 0; i < obj.units.length; i++) {
+        var unit = new Unit(null, -1, "null", "null");
+        unit.load(obj.units[i]);
+        this.units.push(unit);
+    }
+};
+
+/** Returns a random tile that is of the given type */
+Map.prototype.randomTile = function(type) {
+    while(true) {
+        var x = Math.floor(Math.random() * this.cols());
+        var y = Math.floor(Math.random() * this.rows());
+        if(this.terrain[y][x] == type) {
+            return {x: x, y: y};
+        }
+    }
+};
+
+/** Returns the unit on a given tile, or null */
+Map.prototype.tileUnit = function(tile) {
+    for(var i = 0; i < this.units.length; i++) {
+        if(this.units[i].pos.x == tile.x && this.units[i].pos.y == tile.y) {
+            return this.units[i];
+        }
+    }
+    return null;
 };
 
 /** Gets the row and column of the hexagon that contains (px, py)

@@ -72,7 +72,6 @@ LobbyData.prototype.addClient = function(socket) {
                 // Send them a complete copy of the game state, to make sure they're right
                 socket.emit("gsfull", gs.dump());
             }
-            console.log(client.id + " in " + JSON.stringify(gs.players));
         }
     });
     

@@ -18,7 +18,7 @@ var Map = function(rows, cols) {
     for(var row = 0; row < rows; row++) {
         this.terrain[row] = [];
         for(var col = 0; col < cols; col++) {
-            this.terrain[row][col] = Tile.NORMAL;
+            this.terrain[row][col] = Math.random() > 0.1 ? Tile.NORMAL : Tile.WALL;
         }
     }
     
@@ -235,6 +235,16 @@ Map.prototype.hexAtTransformed = function(px, py, x, y, offsetx, offsety, scale)
     scale = typeof scale !== "undefined" ? scale : 1.0;
     
     return this.hexAt((px + offsetx - x) / scale, (py + offsety - y) / scale);
+};
+
+/** Gets whether the given tile is walkable */
+Map.prototype.tileWalkable = function(tile) {
+    if(!this.onGrid(tile)) return false;
+    if(!Tile.properties[this.tileAt(tile)].walkable) return false;
+    var unit = this.tileUnit(tile);
+    if(unit != null) return false;
+    
+    return true;
 };
 
 if(typeof exports === "object") {

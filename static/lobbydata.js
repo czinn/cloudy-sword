@@ -78,15 +78,17 @@ LobbyData.prototype.addClient = function(socket) {
     this.updateClients("lobby", [client.id]);
     
     var _this = this;
-    socket.on("turn", function(data) { // a turn update from a client
+    socket.on("action", function(data) { // a new action from the client
         if(client.currentGame != null && _this.gameExists(client.currentGame)) {
             var gs = _this.gamestates[client.currentGame];
             // Verify that this player is actually a player in the game
-            if(gs.hasPlayer(client.id)) {
+            // Also ensure the action is valid
+            var ingameid = gs.hasPlayer(client.id);
+            if(ingameid != -1 && gs.validAction(data, ingameid)) {
                 // Update the local game state
-                gs.doTurn(data);
+                gs.doAction(data);
                 // Send out the update to everyone else in this game
-                socket.broadcast.to("game_" + client.currentGame).emit("turn", data);
+                socket.broadcast.to("game_" + client.currentGame).emit("action", data);
             } else {
                 // Send them a complete copy of the game state, to make sure they're right
                 socket.emit("gsfull", gs.dump());

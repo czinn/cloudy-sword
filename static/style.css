@@ -1,3 +1,13 @@
+#chat {
+    position:absolute;
+    min-width:100%;
+    font-size: 35px;
+    bottom: 0px;
+}
+#canvas {
+    position:absolute;
+}
+
 * {
     margin: 0px;
     padding: 0px;

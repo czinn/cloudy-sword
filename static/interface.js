@@ -99,13 +99,14 @@ var Interface = function(canvas, gs, socket) {
     this.canvas.onclick = function(e) {
         var mx = e.pageX - e.target.offsetLeft;
         var my = e.pageY - e.target.offsetTop;
+        var width = document.getElementById("canvas").width;
         
         if(_this.uistate == 0) { // Lobby
             var k = 0; // Drawing index
             for(var i in _this.gamelist) {
                 if(_this.gamelist.hasOwnProperty(i)) {
                     // Check if mouse is over this game state
-                    if(mx >= 50 && mx < 450 && my >= 50 + k * 50 && my < 90 + k * 50) {
+                    if(mx >= width - 400 && mx < width && my >= 10 + k * 50 && my < 50 + k * 50) {
                         // Join this game
                         socket.emit("joingame", {gameId: i});
                         // Change uistate to in game
@@ -251,7 +252,7 @@ Interface.prototype.resize = function() {
 Interface.prototype.render = function() {
     // Get the context
     var ctx = this.canvas.getContext("2d");
-    
+    var width = document.getElementById("canvas").width;
     // Clear the canvas with a black background
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -264,13 +265,13 @@ Interface.prototype.render = function() {
                 var summary = this.gamelist[i];
                 ctx.fillStyle = "#AAAAAA";
                 // Check if mouse is over it
-                if(this.oldmx >= 50 && this.oldmx < 450 && this.oldmy >= 50 + k * 50 && this.oldmy < 90 + k * 50)
+                if(this.oldmx >= width - 400 && this.oldmx < width && this.oldmy >= 10 + k * 50 && this.oldmy < 50 + k * 50)
                     ctx.fillStyle = "#DDDDDD";
                 // Draw the back box
-                ctx.fillRect(50, 50 + k * 50, 400, 40);
+                ctx.fillRect(width - 400, 10+ k * 50, 400, 40);
                 // Draw the text
                 ctx.fillStyle = "#444444";
-                ctx.fillText("Game " + i + ": " + summary.players + "/" + summary.numPlayers + " players; Map: " + summary.mapsize, 60, 75 + k * 50);
+                ctx.fillText("Game " + i + ": " + summary.players + "/" + summary.numPlayers + " players; Map: " + summary.mapsize, width - 390, 35 + k * 50);
                 
                 k++;
             }
@@ -293,7 +294,7 @@ Interface.prototype.render = function() {
     ctx.fillStyle = "#FF0000";
     ctx.font = "20px Arial";
     for(var i = 0; i < this.messages.length; i++) {
-        ctx.fillText(this.messages[i], 500, 100 + i * 30);
+        ctx.fillText(this.messages[i], 5, 30+i * 30);
     }
 };
 
@@ -366,5 +367,19 @@ Interface.prototype.renderMap = function(ctx) {
         ctx.lineTo(x + hexx, y + hexy + h / 4);
         
         ctx.stroke();
+    }
+};
+
+Interface.prototype.processChat = function(chat) {
+    if (chat == "/help") {
+        this.messages.push("+=+=+=+=+Help+=+=+=+=+");
+        this.messages.push("/clear - Clears the chat window");
+    } else if (chat == "/clear") {
+        while(this.messages.length > 0) {
+            this.messages.pop();
+        }
+        this.messages.push("Chat cleared");
+    } else {
+        this.messages.push("Unknown command. Type /help for help");
     }
 };

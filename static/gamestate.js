@@ -9,6 +9,7 @@
 if(typeof exports === "object") {
     var Map = require("./map.js");
     var Tile = require("./tile.js");
+    var Unit = require("./unit.js");
 }
   
 /** Creates a new game state object for the given number of players */
@@ -20,6 +21,11 @@ var GameState = function(players, rows, columns) {
     this.players = []; // A list of players in the game
     
     this.numPlayers = players;
+    
+    // Add a test unit for each player
+    for(var i = 0; i < this.numPlayers; i++) {
+        this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "race", "class"));
+    }
     
     this.clearTurn();
 };
@@ -121,12 +127,15 @@ GameState.prototype.doTurn = function(obj) {
 /** Does an action; updates the game state.
   * Adds the action to localTurn iff addLocal is not false */
 GameState.prototype.doAction = function(action, addLocal) {
-    // For now, action is basically just a tile to be flipped
+    // Action is a tile containing a unit and the direction to move it
+    // Direction is of the form {x: x_change, y: y_change}
     var tile = action.tile;
-    if(this.map.terrain[tile.y][tile.x] != Tile.EMPTY) {
-        this.map.terrain[tile.y][tile.x]++;
-        if(this.map.terrain[tile.y][tile.x] > Tile.WATER)
-            this.map.terrain[tile.y][tile.x] = Tile.NORMAL;
+    var dir = action.dir;
+    
+    var unit = this.map.tileUnit(tile);
+    if(unit != null) {
+        unit.pos.x += dir.x;
+        unit.pos.y += dir.y;
     }
     
     if(typeof addLocal === "undefined" || addLocal) {

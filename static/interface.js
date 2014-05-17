@@ -6,6 +6,7 @@
 
 // Declare constants
 var HEX_HEIGHT = 200; //pixels
+var PLAYER_COLORS = ["#FF0000", "#0000FF", "#00FF00", "#FF00FF"]; // Colours for the different players
   
 /** Creates the interface object.
   * Needs a reference to the canvas to set up click handlers.
@@ -98,13 +99,14 @@ var Interface = function(canvas, gs, socket) {
     this.canvas.onclick = function(e) {
         var mx = e.pageX - e.target.offsetLeft;
         var my = e.pageY - e.target.offsetTop;
+        var width = document.getElementById("canvas").width;
         
         if(_this.uistate == 0) { // Lobby
             var k = 0; // Drawing index
             for(var i in _this.gamelist) {
                 if(_this.gamelist.hasOwnProperty(i)) {
                     // Check if mouse is over this game state
-                    if(mx >= 50 && mx < 450 && my >= 50 + k * 50 && my < 90 + k * 50) {
+                    if(mx >= width - 400 && mx < width && my >= 10 + k * 50 && my < 50 + k * 50) {
                         // Join this game
                         socket.emit("joingame", {gameId: i});
                         // Change uistate to in game
@@ -174,28 +176,37 @@ var Interface = function(canvas, gs, socket) {
 		var key = e.keyCode || e.which;
         
         if(_this.uistate == 1) { // In-game
-            if(key == 119) { // W
-                _this.moveSelected(0, -1);
-            }
-            if(key == 101) { // E
-                _this.moveSelected(1, -1);
-            }
-            if(key == 97) { //A
-                _this.moveSelected(-1, 0);
-            }
-            if(key == 115) { //S
-                if(_this.selectedTile.x != -1) {
-                    _this.clickTile(_this.selectedTile);
+            // Get the unit at the cursor
+            var unit = _this.gs.map.tileUnit(_this.selectedTile);
+            var tile = {x: _this.selectedTile.x, y: _this.selectedTile.y};
+            if(unit != null && unit.controller == _this.playingAs) {
+                if(key == 119) { // W
+                    _this.gs.doAction({tile: tile, dir: {x: 0, y: -1}});
+                    _this.moveSelected(0, -1);
                 }
-            }
-            if(key == 100) { //D
-                _this.moveSelected(1, 0);
-            }
-            if(key == 122) { //Z
-                _this.moveSelected(-1, 1);
-            }
-            if(key == 120) { //X
-                _this.moveSelected(0, 1);
+                if(key == 101) { // E
+                    _this.gs.doAction({tile: tile, dir: {x: 1, y: -1}});
+                    _this.moveSelected(1, -1);
+                }
+                if(key == 97) { //A
+                    _this.gs.doAction({tile: tile, dir: {x: -1, y: 0}});
+                    _this.moveSelected(-1, 0);
+                }
+                if(key == 100) { //D
+                    _this.gs.doAction({tile: tile, dir: {x: 1, y: 0}});
+                    _this.moveSelected(1, 0);
+                }
+                if(key == 122) { //Z
+                    _this.gs.doAction({tile: tile, dir: {x: -1, y: 1}});
+                    _this.moveSelected(-1, 1);
+                }
+                if(key == 120) { //X
+                    _this.gs.doAction({tile: tile, dir: {x: 0, y: 1}});
+                    _this.moveSelected(0, 1);
+                }
+                // Immediately send the turn to the server (just temp)
+                _this.socket.emit("turn", gs.localTurn);
+                _this.gs.clearTurn();
             }
         }
         
@@ -212,15 +223,6 @@ var Interface = function(canvas, gs, socket) {
   */
 Interface.prototype.clickTile = function(tile) {
     if(this.uistate == 1) { // In-game
-        if(this.playingAs != -1) { // Not a spectator
-            if(this.selectedTile.x == tile.x && this.selectedTile.y == tile.y) {
-                // Flip the tile using the game state method
-                this.gs.doAction({tile: tile});
-                // Immediately send the turn to the server (not how it will actually work, just temp)
-                this.socket.emit("turn", gs.localTurn);
-                this.gs.clearTurn();
-            }
-        }
         this.selectedTile = tile;
     }
 };
@@ -250,7 +252,7 @@ Interface.prototype.resize = function() {
 Interface.prototype.render = function() {
     // Get the context
     var ctx = this.canvas.getContext("2d");
-    
+    var width = document.getElementById("canvas").width;
     // Clear the canvas with a black background
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -263,13 +265,13 @@ Interface.prototype.render = function() {
                 var summary = this.gamelist[i];
                 ctx.fillStyle = "#AAAAAA";
                 // Check if mouse is over it
-                if(this.oldmx >= 50 && this.oldmx < 450 && this.oldmy >= 50 + k * 50 && this.oldmy < 90 + k * 50)
+                if(this.oldmx >= width - 400 && this.oldmx < width && this.oldmy >= 10 + k * 50 && this.oldmy < 50 + k * 50)
                     ctx.fillStyle = "#DDDDDD";
                 // Draw the back box
-                ctx.fillRect(50, 50 + k * 50, 400, 40);
+                ctx.fillRect(width - 400, 10+ k * 50, 400, 40);
                 // Draw the text
                 ctx.fillStyle = "#444444";
-                ctx.fillText("Game " + i + ": " + summary.players + "/" + summary.numPlayers + " players; Map: " + summary.mapsize, 60, 75 + k * 50);
+                ctx.fillText("Game " + i + ": " + summary.players + "/" + summary.numPlayers + " players; Map: " + summary.mapsize, width - 390, 35 + k * 50);
                 
                 k++;
             }
@@ -292,7 +294,7 @@ Interface.prototype.render = function() {
     ctx.fillStyle = "#FF0000";
     ctx.font = "20px Arial";
     for(var i = 0; i < this.messages.length; i++) {
-        ctx.fillText(this.messages[i], 500, 100 + i * 30);
+        ctx.fillText(this.messages[i], 5, 30+i * 30);
     }
 };
 
@@ -335,6 +337,15 @@ Interface.prototype.renderMap = function(ctx) {
                 
                 ctx.fill();
                 ctx.stroke();
+                
+                // Draw unit
+                var unit = map.tileUnit({x: c, y: r});
+                if(unit != null) {
+                    ctx.fillStyle = PLAYER_COLORS[unit.controller];
+                    ctx.beginPath();
+                    ctx.arc(x + hexx + w / 2, y + hexy + h / 2, w / 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             }
         }
     }
@@ -356,5 +367,22 @@ Interface.prototype.renderMap = function(ctx) {
         ctx.lineTo(x + hexx, y + hexy + h / 4);
         
         ctx.stroke();
+    }
+};
+
+Interface.prototype.processChat = function(chat) {
+    if (chat == "/help") {
+        this.messages.push("+=+=+=+=+Help+=+=+=+=+");
+        this.messages.push("/clear - Clears the chat window");
+    } else if (chat == "/clear") {
+        while(this.messages.length > 0) {
+            this.messages.pop();
+        }
+        this.messages.push("Chat cleared");
+    } else if (chat.charAt(0) == "/") {
+        this.messages.push("Unknown command. Type /help for help");
+    } else {
+        this.socket.emit("clientchat", chat);
+        this.messages.push(this.playingAs + ": " + chat);
     }
 };

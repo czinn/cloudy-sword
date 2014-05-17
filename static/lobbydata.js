@@ -72,7 +72,6 @@ LobbyData.prototype.addClient = function(socket) {
                 // Send them a complete copy of the game state, to make sure they're right
                 socket.emit("gsfull", gs.dump());
             }
-            console.log(client.id + " in " + JSON.stringify(gs.players));
         }
     });
     
@@ -92,6 +91,10 @@ LobbyData.prototype.addClient = function(socket) {
     
     socket.on("disconnect", function(data) {
         _this.clientLeaveGame(client);
+    });
+    
+    socket.on("clientchat", function(message) {
+        socket.broadcast.emit("message", client.id + ": " + message);
     });
 };
 

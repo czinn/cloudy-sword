@@ -166,6 +166,33 @@ Map.prototype.tileUnit = function(tile) {
     return null;
 };
 
+/** Returns the tile at the given location */
+Map.prototype.tileAt = function(location) {
+    return this.terrain[location.y][location.x];
+}
+
+/** Sets the tile at the location with the given tile type */
+Map.prototype.setTile = function(location, tile) {
+    this.terrain[location.y][location.x] = tile;
+}
+
+/** Counts the number of tiles around a given location of the given type */
+Map.prototype.tileCount = function(location, tile) {
+    var locations = [[-1, 0], [1,0],[0,-1], [0,1], [-1,1], [1,-1]];    
+    var amount = 0;
+    var _this = this;
+    locations.forEach(function(location) {
+        var t = {x:location.x+location[0], y:location.y+location[1]};
+        if (_this.onGrid(t) && _this.tileAt(t) == tile) amount++;
+    });
+    return amount;
+}
+
+/** Checks of the given location is on the grid (Not empty and in array) */
+Map.prototype.onGrid = function(tile) {
+    return (tile.y >= 0 && tile.y < this.rows() && tile.x >= 0 && tile.x < this.cols()) && this.tileAt(tile) != Tile.EMPTY;
+}
+
 /** Gets the row and column of the hexagon that contains (px, py)
   * @returns {x: column, y: row}
   */

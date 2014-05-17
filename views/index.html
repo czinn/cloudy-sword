@@ -15,6 +15,17 @@ var ui; // The interface
 
 var gs; // The local GameState
 
+function processChat(e) {
+    var key = e.keyCode ? e.keyCode : e.charCode;
+    
+    if(key == 13) { //Enter
+        var element = document.getElementById("chat");
+        var value = element.value;
+        element.value = "";
+        ui.processChat(value);
+    }
+}
+
 function init() {
     // Create the game state
     gs = new GameState(2);
@@ -37,5 +48,6 @@ window.onload = init;
 
 <body>
     <canvas id = "canvas"> Your browser does not support canvas.</canvas>
+    <input type = "text" id = "chat" autocomplete="off" onkeypress="processChat(event)">
 </body>
 </html>

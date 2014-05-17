@@ -92,6 +92,10 @@ LobbyData.prototype.addClient = function(socket) {
     socket.on("disconnect", function(data) {
         _this.clientLeaveGame(client);
     });
+    
+    socket.on("clientchat", function(message) {
+        socket.broadcast.emit("message", client.id + ": " + message);
+    });
 };
 
 /** Handles a client joining a game */

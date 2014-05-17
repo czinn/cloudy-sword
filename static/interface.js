@@ -379,7 +379,10 @@ Interface.prototype.processChat = function(chat) {
             this.messages.pop();
         }
         this.messages.push("Chat cleared");
-    } else {
+    } else if (chat.charAt(0) == "/") {
         this.messages.push("Unknown command. Type /help for help");
+    } else {
+        this.socket.emit("clientchat", chat);
+        this.messages.push(this.playingAs + ": " + chat);
     }
 };

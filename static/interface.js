@@ -103,12 +103,12 @@ var Interface = function(canvas, gs, socket) {
                         _this.messages.push(_this.clientlist[i] + " has left the room");
                         delete _this.clientlist[i];
                     } else {
-						if(typeof _this.clientlist[i] === "undefined") { // Only do join message if the client is a new client
-							if (i != "full") {
-								_this.messages.push(data[i] + " has joined the room");
-							}
-						}
-						_this.clientlist[i] = data[i];
+                        if(typeof _this.clientlist[i] === "undefined") { // Only do join message if the client is a new client
+                            if (i != "full") {
+                                _this.messages.push(data[i] + " has joined the room");
+                            }
+                        }
+                        _this.clientlist[i] = data[i];
                     }
                 }
             }
@@ -211,8 +211,8 @@ var Interface = function(canvas, gs, socket) {
     window.onresize = this.resize;
     // Key press
     window.onkeypress = function(e) {
-		if(!e) e = window.event;
-		var key = e.keyCode || e.which;
+        if(!e) e = window.event;
+        var key = e.keyCode || e.which;
         
         // Ensure that the chat box isn't selected
         if(document.activeElement == document.getElementById("chat"))
@@ -361,16 +361,16 @@ Interface.prototype.render = function() {
     var k = 0;
     for(var i in this.clientlist) {
         if(this.clientlist.hasOwnProperty(i)) {
-			var ctext = this.clientlist[i];
-			if(i == this.clientid) {
-				ctext += " (You)";
-			} else if(this.uistate == 1) { // In-game
-				// See what player in the game this player is
-				var ingameid = this.gs.hasPlayer(i);
-				if(ingameid != -1) {
-					ctext += " (Player " + (ingameid + 1) + ")";
-				}
-			}
+            var ctext = this.clientlist[i];
+            if(i == this.clientid) {
+                ctext += " (You)";
+            } else if(this.uistate == 1) { // In-game
+                // See what player in the game this player is
+                var ingameid = this.gs.hasPlayer(i);
+                if(ingameid != -1) {
+                    ctext += " (Player " + (ingameid + 1) + ")";
+                }
+            }
             ctx.fillText(ctext, 5, 400 + 30 * k);
             k++;
         }
@@ -465,7 +465,7 @@ Interface.prototype.processChat = function(chat) {
             }
             this.messages.push("Chat cleared");
         } else if(sp[0] == "/name") {
-			var regex = /^[-a-z0-9]+$/i;
+            var regex = /^[-a-z0-9]+$/i;
             if(sp.length > 1 && (sp[1].length > 3 || sp[1] == "Sam") && regex.test(sp[1])) {
                 this.socket.emit("changename", sp[1]);
             }

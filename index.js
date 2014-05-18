@@ -73,7 +73,7 @@ process.stdin.on('data', function (text) {
                     message += args[i] + " ";
                 }
                 lobby.replyTo = args[1];
-                lobby.getClientByName(args[1]).socket.emit("message", "The Console whispers " + message);
+                lobby.getClientByName(args[1]).socket.emit("chat", {from:"console", to:args[1], message:message});
                 console.log("[console -> " + args[1] + "] " + message);
             } else {
                 console.log("That user does not exist");
@@ -88,7 +88,7 @@ process.stdin.on('data', function (text) {
                 for (var i = 1; i < args.length; i++) {
                     message += args[i] + " ";
                 }
-                lobby.getClientByName(lobby.replyTo).socket.emit("msguser", {from:"The Console", to:lobby.replyTo, message:message});
+                lobby.getClientByName(lobby.replyTo).socket.emit("chat", {from:"console", to:lobby.replyTo, message:message});
                 console.log("[console -> " + lobby.replyTo + "] " + message);
             } else {
                 console.log("You have no one whom you can reply to");

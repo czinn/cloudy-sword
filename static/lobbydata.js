@@ -144,21 +144,19 @@ LobbyData.prototype.addClient = function(socket) {
         delete _this.clients[client.id];
     });
     
-    socket.on("clientchat", function(message) {
-        console.log("<CHAT> " + client.name + ": " + message);
-        socket.broadcast.emit("message", client.name + ": " + message);
-    });
-    
-    socket.on("msguser", function(data) {
+    socket.on("chat", function(data) {
         if (typeof data.to === "string" && typeof data.message === "string") {
             if (data.to == "console") {
                 _this.replyTo = client.name;
                 console.log("[" + client.name + " -> console] " + data.message);
             } else {
                 if (_this.getClientByName(data.to) != null) {
-                    _this.getClientByName(data.to).socket.emit("msguser", {from:client.name, message:data.message, to:data.to});
+                    _this.getClientByName(data.to).socket.emit("chat", {from:client.name, message:data.message, to:data.to});
                 }
             }
+        } else {
+            console.log("<CHAT> " + client.name + ": " + data.message);
+            socket.broadcast.emit("chat", {from:client.name, message:data.message});
         }
     });
     
@@ -288,6 +286,9 @@ LobbyData.prototype.updateGames = function(ids) {
 
 /** Checks whether a name is already in use */
 LobbyData.prototype.isNameUsed = function(name) {
+    if(name == "console")
+        return true;
+        
     for(var i in this.clients) {
         if(this.clients.hasOwnProperty(i)) {
             if(this.clients[i].name == name)

@@ -122,9 +122,13 @@ var Interface = function(canvas, gs, socket) {
     socket.on("message", function(data) {
         _this.messages.push(data);
     });
-    socket.on("msguser", function(data) {
+    socket.on("chat", function(data) {
         _this.replyTo = data.from;
-        _this.messages.push("[" + data.from + " \u2192 " + _this.clientlist[_this.clientid] + "] " + data.message);
+        if(typeof data.to !== "undefined") {
+            _this.messages.push("[" + data.from + " \u2192 " + _this.clientlist[_this.clientid] + "] " + data.message);
+        } else {
+            _this.messages.push(data.from + ": " + data.message);
+        }
     });
     
     
@@ -462,7 +466,7 @@ Interface.prototype.processChat = function(chat) {
                 }
                 if (this.getClientByName(sp[1]) != null || sp[1] == "console") {
                     this.replyTo = sp[1];
-                    this.socket.emit("msguser", {to:sp[1], message:message});
+                    this.socket.emit("chat", {to:sp[1], message:message});
                     this.messages.push("[" + this.clientlist[this.clientid] + " \u2192 " + sp[1] + "] " + message);
                 } else {
                     this.messages.push("User not found!");
@@ -479,7 +483,7 @@ Interface.prototype.processChat = function(chat) {
                     for (var i = 1; i < sp.length; i++) {
                         message += sp[i] + " ";
                     }
-                    this.socket.emit("msguser", {to:this.replyTo, message:message});
+                    this.socket.emit("chat", {to:this.replyTo, message:message});
                     this.messages.push("[" + this.clientlist[this.clientid] + " \u2192 " + this.replyTo + "] " + message);
                 }
             }
@@ -487,7 +491,7 @@ Interface.prototype.processChat = function(chat) {
             this.messages.push("Unknown command. Type /help for help");
         }
     } else {
-        this.socket.emit("clientchat", chat);
+        this.socket.emit("chat", {message: chat});
         this.messages.push(this.clientlist[this.clientid] + ": " + chat);
     }
 };

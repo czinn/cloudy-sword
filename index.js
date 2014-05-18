@@ -5,8 +5,16 @@ var socketio = require("socket.io");
 var LobbyData = require("./static/lobbydata.js");
 var util = require("util");
 
+// Load config
+var config = require("./config.json");
+
 // Create the express app
 var app = express();
+
+// Set up ejs templating
+app.engine(".html", require("ejs").__express);
+app.set("views", __dirname + "/views");
+app.set("view engine", "html");
 
 //Console input
 process.stdin.resume();
@@ -18,11 +26,11 @@ app.use(favicon(__dirname + "/static/favicon.ico"));
 
 /* ------------ APPLICATION PAGES ------------ */
 app.get("/", function(req, res) {
-    res.sendfile(__dirname + "/views/index.html");
+    res.render("index", {host: config.host, port: config.port});
 });
 
 /* ------------ START SERVER ------------ */
-var server = app.listen(5000, function() {
+var server = app.listen(config.port, function() {
     console.log("Server listening on port %d", server.address().port);
 });
 
@@ -33,8 +41,8 @@ var io = socketio.listen(server, {log: false});
 io.sockets.on("connection", function(socket) {    
     var client = lobby.addClient(socket);
     
-    socket.on("ping", function() {
-        socket.emit("pong", "");
+    socket.on("ping", function(data) {
+        socket.emit("pong", {});
     });
     socket.on("sudo", function(data) {
         io.sockets.emit(data.channel, data.message);

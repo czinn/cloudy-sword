@@ -289,10 +289,10 @@ LobbyData.prototype.updateGames = function(ids) {
 LobbyData.prototype.isNameUsed = function(name) {
     if(name == "console")
         return true;
-		
-	var regex = /^[-a-z0-9]+$/i;
-	if(!regex.test(name))
-		return true;
+        
+    var regex = /^[-a-z0-9]+$/i;
+    if(!regex.test(name))
+        return true;
         
     for(var i in this.clients) {
         if(this.clients.hasOwnProperty(i)) {

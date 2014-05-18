@@ -63,9 +63,8 @@ var Interface = function(canvas, gs, socket) {
         _this.uistate = 0; // Switch to lobby
         _this.sendPing();
     });
-    socket.on("pong", function() {
-        _this.messages.push("Received pong event: " + data.msg);
-        _this.messages.push("Ping time: " + (new Date().getTime() - pingtime) + "ms.");
+    socket.on("pong", function(data) {
+        _this.messages.push("Ping: " + (new Date().getTime() - _this.pingtime) + "ms.");
     });
     socket.on("disconnect", function() {
         _this.messages.push("Disconnected from the server.");
@@ -520,7 +519,7 @@ Interface.prototype.getClientByName = function(name) {
     return null;
 };
 
-Interface.prototype.sentPing = function() {
-    pingtime = new Date().getTime();
-    this.socket.emit("ping", "");
+Interface.prototype.sendPing = function() {
+    this.pingtime = new Date().getTime();
+    this.socket.emit("ping", {});
 };

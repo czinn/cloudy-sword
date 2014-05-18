@@ -50,4 +50,7 @@ io.sockets.on("connection", function(socket) {
 var lobby = new LobbyData(io);
 // Create some games in it
 lobby.addGame({rows: 25, cols: 25});
+lobby.addGame({rows: 25, cols: 25});
+lobby.addGame({rows: 25, cols: 25});
+lobby.addGame({});
 lobby.addGame({});

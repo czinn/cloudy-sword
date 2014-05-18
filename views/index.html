@@ -21,9 +21,15 @@ function processChat(e) {
     
     if(key == 13) { //Enter
         var element = document.getElementById("chat");
-        var value = element.value;
+        var val = element.value;
         element.value = "";
-        ui.processChat(value);
+        ui.processChat(val);
+        
+        // Unfocus the chat
+        document.getElementById("chat").blur();
+        
+        // Prevent the event from propagating on to the window and reselecting the chat
+        e.stopPropagation();
     }
 }
 

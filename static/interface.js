@@ -434,7 +434,7 @@ Interface.prototype.processChat = function(chat) {
             } else {
                 var message = "";
                 for (var i = 2; i < sp.length; i++) {
-                    message += sp[i];
+                    message += sp[i] + " ";
                 }
                 if (this.getClientByName(sp[1]) != null) {
                     this.socket.emit("msguser", message, sp[1]);

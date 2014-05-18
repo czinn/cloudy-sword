@@ -33,7 +33,7 @@ io.sockets.on("connection", function(socket) {
     var addr = socket.handshake.address;
     console.log("A client connected from " + addr.address + ":" + addr.port);
     
-    lobby.addClient(socket);
+    var client = lobby.addClient(socket);
     
     // Set up Socket.IO event callbacks here
     socket.on("ping", function(data) {
@@ -46,20 +46,6 @@ io.sockets.on("connection", function(socket) {
     
     socket.on("sudo", function(data) {
         io.sockets.emit(data.channel, data.message);
-    });
-    
-    socket.on("msguser", function(message, user) {
-        if (typeof user === 'string') {
-            if (user == "console") {
-                if (lobby.getClientBySocket(socket) != null) {
-                    console.log(lobby.getClientBySocket(socket).name + " whispers " + message);
-                }
-            } else {
-                if (lobby.getClientByName(user) != null) {
-                    lobby.getClientByName(user).socket.emit("message", lobby.getClientByName(user).name + " whispers " + message);
-                }
-            }
-        }
     });
 });
 
@@ -90,7 +76,7 @@ process.stdin.on('data', function (text) {
             if (lobby.getClientByName(args[1]) != null) {
                 var message = "";
                 for (var i = 2; i < args.length; i++) {
-                    message += args[i];
+                    message += args[i] + " ";
                 }
                 lobby.getClientByName(args[1]).socket.emit("message", "The Console whispers " + message);
                 console.log("[console -> " + args[1] + "] " + message);

@@ -118,6 +118,9 @@ LobbyData.prototype.addClient = function(socket) {
                 // Send the update to everyone in their room
                 _this.updateClients(client.roomName(), [client.id]);
                 _this.io.sockets.in(client.roomName()).emit("message", oldName + " is now " + data);
+                
+                // Log to the console
+                console.log(oldName + " is now " + data);
             }
         }
     });
@@ -137,8 +140,23 @@ LobbyData.prototype.addClient = function(socket) {
     });
     
     socket.on("clientchat", function(message) {
+        console.log("<CHAT> " + client.name + ": " + message);
         socket.broadcast.emit("message", client.name + ": " + message);
     });
+    
+    socket.on("msguser", function(message, user) {
+        if (typeof user === "string") {
+            if (user == "console") {
+                console.log(client.name + " whispers " + message);
+            } else {
+                if (lobby.getClientByName(user) != null) {
+                    lobby.getClientByName(user).socket.emit("message", lobby.getClientByName(user).name + " whispers " + message);
+                }
+            }
+        }
+    });
+    
+    return client;
 };
 
 /** Handles a client joining a game */
@@ -285,14 +303,5 @@ LobbyData.prototype.getClientByName = function(name) {
     return null;
 };
 
-LobbyData.prototype.getClientBySocket = function(socket) {
-    for(var i in this.clients) {
-        if(this.clients.hasOwnProperty(i)) {
-            if(this.clients[i].socket == socket) {
-                return this.clients[i];
-            }
-        }
-    }
-    return null;
-};
+
 module.exports = LobbyData;

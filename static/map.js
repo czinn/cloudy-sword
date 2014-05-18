@@ -11,7 +11,7 @@ if(typeof exports === "object") {
 /** Constructor for a map object.
   * Creates an empty map of the specified dimensions.
   */
-var Map = function(rows, cols) {
+var Map = function(rows, cols, rivernum) {
     // Create an normal terrain instead of empty for testing
     this.terrain = [];
 
@@ -23,69 +23,137 @@ var Map = function(rows, cols) {
     }
     
     // Create array to hold units
-    this.units = [];
-    
-    
-    
-    
-    //Basic River generation
-    //Currently dirty, simple and random
-    //River starting row, and column
-    var river_row = Math.floor(Math.random() * (rows - 4)) + 2;
-    var river_column = 0;
+    this.units = []; 
 
+    //If no number of rivers given, use default of 1
+    if (rivernum == null) {
+      rivernum = 1;
+    }
+
+    //Begin river generation
+    for (var i = 0; i < rivernum; i++) {
+      //River starting row, and column
+      var river_startx = (Math.random() > 0.5) ? 0 : rows - 1;
+      var river_starty = (Math.random() > 0.5) ? 0 : cols - 1;
+      //River starting direction
+      var river_startdir = 0;
+
+      //Make the starting position be on an edge
+      if (Math.random() > 0.5) {
+        river_startx = Math.floor(Math.random() * rows);
+      }
+      else {
+        river_starty =  Math.floor(Math.random() * cols);
+      }
+
+      //Pick the starting direction of the river
+      if (river_startx == 0 && river_starty < (cols / 2) || river_starty == 0 && river_startx < (rows / 2)){
+        river_startdir = 3;
+      }
+      else if (river_startx == 0 || river_starty == cols - 1 && river_starty < (rows / 2)) {
+        river_startdir = 4;
+      }
+      else if (river_startx == rows - 1  && river_starty < (cols / 2) || river_starty == 0) {
+        river_startdir = 1;
+      }
+
+      //Calls river generation function
+      this.rivergen(river_startx, river_starty, rows, cols, river_startdir);
+    }
+}
+
+//River generation
+//Still needs tweaking!
+//river_row is current row river is on, river_column is current column river is on, rows is total rows on map, cols is total columns on map, dir is starting direction.
+Map.prototype.rivergen = function(river_row, river_column, rows, cols, dir) {
+    //Limits wandering temporarily, based on map size (appicable to change)
+    var river_limit_wander = (cols + rows) / 4;
+    //Variable for random integer that is from 0 to 100
     var river_randomizer = 0;
-    //River movement, gives river general sense of direction. This number will change with more river starting locations.
-    var river_move = 2;
+    //River direction. This number will change with more river starting locations.
+    var river_move = dir;
 
-
+    //While river is in the map
     while (0 <= river_row && river_row < rows && 0 <= river_column && river_column < cols) {
-      
+
+      //Stop generating if the river hits water
       if (this.terrain[river_row][river_column] == Tile.WATER) {
         break;
       }
+      //Change tile
+      this.terrain[river_row][river_column] = Tile.WATER;
 
-      this.terrain[river_row][river_column] = Tile.WATER
-
+      //Generates the randum number for rthe river to "wander"
       river_randomizer = (Math.floor(Math.random() * 100));
 
-      if (river_randomizer > 99) {
-        river_move = (river_move + 4) % 6;
-      }
-      else if (river_randomizer > 98) {
-        river_move = (river_move + 2) % 6;
-      }
-      else if (river_randomizer > 74) {
-        river_move = (river_move + 5) % 6;
-      }
-      else if (river_randomizer > 52) {
-        river_move = (river_move + 1) % 6;
-      }
+        //Turning probabilities
+        if (river_randomizer > 98) {
+          river_move = (river_move + 4) % 6;
+        }
+        else if (river_randomizer > 97) {
+          river_move = (river_move + 2) % 6;
+        }
+        else if (river_randomizer > 72) {
+          river_move = (river_move + 5) % 6;
+        }
+        else if (river_randomizer > 47) {
+          river_move = (river_move + 1) % 6;
+        }
+        //Continues straight
+        else {
+          //River branching chance
+          if (Math.floor(Math.random() * 10) < 5) {
+            //Branch river at this point
+            //This part needs adjusting (starting direction needs to change to (river_move + [1,2,4,5]) % 6)
+            this.rivergen(river_row, river_column, rows, cols, (((Math.floor(Math.random() * 5) + 1)  + river_move) % 6));
+          }
+        }
+      
+      //Limit direction change at the beginning (lower chance of smaller, off-the-visible-map rivers)
+      if (river_limit_wander > 0) { 
+          //Diagonal left-up only has two directions (in a corner)
+          if (dir == 0) {
+            river_move = (Math.pow((river_move - 2.5), 2) - 6.25 != 0.0) ? Math.floor(Math.random() * 2) * 5: river_move;
 
+          }
+          //Diagonal right-down only has two directions (in a corner)
+          else if (dir == 3) {
+            river_move = (Math.pow((river_move - 2.5), 2) - 0.25 != 0.0) ? Math.floor(Math.random() * 2) + 2: river_move;
+          }
+
+          //Other sides
+          else if (Math.abs(dir - river_move) > 1) {
+            river_move = dir + (Math.floor(Math.random() * 3) - 1);
+          }
+        river_limit_wander --;
+      }
+      
+      //Move the river
       switch (river_move){
         case 0:
-          river_row -= 1;
+          river_row --;
           break;
         case 1:
-          river_row -= 1;
-          river_column += 1;
+          river_row --;
+          river_column ++;
           break;
         case 2:
-          river_column += 1;
+          river_column ++;
           break;
         case 3:
-          river_row += 1;
+          river_row ++;
           break;
         case 4:
-          river_row += 1;
-          river_column -= 1;
+          river_row ++;
+          river_column --;
           break;
         case 5:
-          river_column += 1;
+          river_column --;
           break;
       }
     }
 }
+
 
 /** Calculates the distance between the given hexes
   * A step between adjacent hexes is a distance of 1

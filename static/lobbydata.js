@@ -262,7 +262,6 @@ LobbyData.prototype.updateGames = function(ids) {
     this.io.sockets.in("lobby").emit("gamelist", summaries);
 };
 
-
 /** Checks whether a name is already in use */
 LobbyData.prototype.isNameUsed = function(name) {
     for(var i in this.clients) {
@@ -274,5 +273,26 @@ LobbyData.prototype.isNameUsed = function(name) {
     return false;
 };
 
+/** Get client based on username */
+LobbyData.prototype.getClientByName = function(name) {
+    for(var i in this.clients) {
+        if(this.clients.hasOwnProperty(i)) {
+            if(this.clients[i].name == name) {
+                return this.clients[i];
+            }
+        }
+    }
+    return null;
+};
 
+LobbyData.prototype.getClientBySocket = function(socket) {
+    for(var i in this.clients) {
+        if(this.clients.hasOwnProperty(i)) {
+            if(this.clients[i].socket == socket) {
+                return this.clients[i];
+            }
+        }
+    }
+    return null;
+};
 module.exports = LobbyData;

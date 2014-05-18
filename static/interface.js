@@ -423,8 +423,26 @@ Interface.prototype.processChat = function(chat) {
             }
             this.messages.push("Chat cleared");
         } else if(sp[0] == "/name") {
-            if(sp.length > 1 && sp[1].length > 3) {
+            if(sp.length > 1 && (sp[1].length > 3 || sp[1] == "Sam")) {
                 this.socket.emit("changename", sp[1]);
+            }
+        } else if (sp[0] == "/msg") {
+            if (sp.length < 2) {
+                this.messages.push("/message [user] [message]");
+            } else {
+                var message = "";
+                for (var i = 2; i < sp.length; i++) {
+                    message += sp[i];
+                }
+                if (this.getClientByName(sp[1]) != null) {
+                    this.socket.emit("msguser", message, sp[1]);
+                    this.messages.push("[" + this.clientlist[this.clientid] + " -> " + sp[1] + "] " + message);
+                }  else if (sp[1] == "console") {
+                    this.socket.emit("msguser", message, sp[1]);
+                    this.messages.push("[" + this.clientlist[this.clientid] + " -> " + sp[1] + "] " + message);
+                } else {
+                    this.messages.push("User not found!");
+                }
             }
         } else {
             this.messages.push("Unknown command. Type /help for help");
@@ -433,4 +451,15 @@ Interface.prototype.processChat = function(chat) {
         this.socket.emit("clientchat", chat);
         this.messages.push(this.clientlist[this.clientid] + ": " + chat);
     }
+};
+
+Interface.prototype.getClientByName = function(name) {
+    for(var i in this.clientlist) {
+        if(this.clientlist.hasOwnProperty(i)) {
+            if(this.clientlist[i] == name) {
+                return this.clientlist[i];
+            }
+        }
+    }
+    return null;
 };

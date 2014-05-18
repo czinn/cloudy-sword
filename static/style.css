@@ -1,7 +1,6 @@
 #chat {
     position:absolute;
-    width:90%;
-    margin: 0px 10px;
+    min-width:100%;
     font-size: 35px;
     bottom: 0px;
 }

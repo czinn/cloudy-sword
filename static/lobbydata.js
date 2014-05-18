@@ -39,6 +39,8 @@ var LobbyData = function(io) {
     this.clientIdCounter = 0;
     
     this.io = io;
+    
+    this.replyTo = null;
 };
 
 /** Checks whether a game with the given id exists */
@@ -60,6 +62,8 @@ LobbyData.prototype.addGame = function(settings) {
 
 /** Adds a new client with the given socket */
 LobbyData.prototype.addClient = function(socket) {
+    var addr = socket.handshake.address;
+    console.log("A client connected from " + addr.address + ":" + addr.port);
     var client = new Client(this.clientIdCounter, socket);
     this.clients[this.clientIdCounter] = client;
     this.clientIdCounter++;
@@ -136,6 +140,7 @@ LobbyData.prototype.addClient = function(socket) {
         _this.updateClients("lobby", [client.id]);
         
         // Remove them from the client list
+        console.log(addr.address + ":" + addr.port + " disconnected.");
         delete _this.clients[client.id];
     });
     
@@ -144,13 +149,14 @@ LobbyData.prototype.addClient = function(socket) {
         socket.broadcast.emit("message", client.name + ": " + message);
     });
     
-    socket.on("msguser", function(message, user) {
-        if (typeof user === "string") {
-            if (user == "console") {
-                console.log(client.name + " whispers " + message);
+    socket.on("msguser", function(data) {
+        if (typeof data.to === "string" && typeof data.message === "string") {
+            if (data.to == "console") {
+                _this.replyTo = client.name;
+                console.log("[" + client.name + " -> console] " + data.message);
             } else {
-                if (lobby.getClientByName(user) != null) {
-                    lobby.getClientByName(user).socket.emit("message", lobby.getClientByName(user).name + " whispers " + message);
+                if (_this.getClientByName(data.to) != null) {
+                    _this.getClientByName(data.to).socket.emit("msguser", {from:client.name, message:data.message, to:data.to});
                 }
             }
         }

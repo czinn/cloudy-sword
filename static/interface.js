@@ -49,6 +49,9 @@ var Interface = function(canvas, gs, socket) {
     // Ping time for pinging
     var pingtime = 0;
     
+    // Last person to have been messaged, or recieved a message from
+    var replyTo = null;
+    
     var _this = this;
     
     /* ------------ SOCKET.IO CALLBACKS ------------ */
@@ -56,12 +59,11 @@ var Interface = function(canvas, gs, socket) {
         _this.messages.push("Connecting to server...");
     });
     socket.on("connect", function() {
-        _this.messages.push("Connected. Sending ping event...");
-        pingtime = new Date().getTime();
-        _this.socket.emit("ping", {msg: "Everything works!"});
+        _this.messages.push("Connected");
         _this.uistate = 0; // Switch to lobby
+        _this.sendPing();
     });
-    socket.on("pong", function(data) {
+    socket.on("pong", function() {
         _this.messages.push("Received pong event: " + data.msg);
         _this.messages.push("Ping time: " + (new Date().getTime() - pingtime) + "ms.");
     });
@@ -98,9 +100,13 @@ var Interface = function(canvas, gs, socket) {
             for(var i in data) {
                 if(data.hasOwnProperty(i)) {
                     if(data[i] == null) {
+                        _this.messages.push(_this.clientlist[i] + " has left the room");
                         delete _this.clientlist[i];
                     } else {
                         _this.clientlist[i] = data[i];
+                        if (_this.clientlist[i] != data.full) {
+                            _this.messages.push(_this.clientlist[i] + " has joined the room");
+                        }
                     }
                 }
             }
@@ -116,6 +122,11 @@ var Interface = function(canvas, gs, socket) {
     socket.on("message", function(data) {
         _this.messages.push(data);
     });
+    socket.on("msguser", function(data) {
+        _this.replyTo = data.from;
+        _this.messages.push("[" + data.from + " \u2192 " + _this.clientlist[_this.clientid] + "] " + data.message);
+    });
+    
     
     /* ------------ CANVAS CALLBACKS ------------ */
     this.canvas.onclick = function(e) {
@@ -419,6 +430,8 @@ Interface.prototype.processChat = function(chat) {
         if (sp[0] == "/help") {
             this.messages.push("+=+=+=+=+Help+=+=+=+=+");
             this.messages.push("/clear - Clears the chat window");
+            this.messages.push("/msg - Private Message someone");
+            this.messages.push("/r - Reply to a last messaged person");
         } else if (sp[0] == "/clear") {
             while(this.messages.length > 0) {
                 this.messages.pop();
@@ -430,20 +443,33 @@ Interface.prototype.processChat = function(chat) {
             }
         } else if (sp[0] == "/msg") {
             if (sp.length < 2) {
-                this.messages.push("/message [user] [message]");
+                this.messages.push("/msg [user] [message]");
             } else {
                 var message = "";
                 for (var i = 2; i < sp.length; i++) {
                     message += sp[i] + " ";
                 }
-                if (this.getClientByName(sp[1]) != null) {
-                    this.socket.emit("msguser", message, sp[1]);
-                    this.messages.push("[" + this.clientlist[this.clientid] + " -> " + sp[1] + "] " + message);
-                }  else if (sp[1] == "console") {
-                    this.socket.emit("msguser", message, sp[1]);
-                    this.messages.push("[" + this.clientlist[this.clientid] + " -> " + sp[1] + "] " + message);
+                if (this.getClientByName(sp[1]) != null || sp[1] == "console") {
+                    this.replyTo = sp[1];
+                    this.socket.emit("msguser", {to:sp[1], message:message});
+                    this.messages.push("[" + this.clientlist[this.clientid] + " \u2192 " + sp[1] + "] " + message);
                 } else {
                     this.messages.push("User not found!");
+                }
+            }
+        } else if (sp[0] == "/r") {
+            if (sp.length < 1) {
+                this.messages.push("/r [message]");
+            } else {
+                if (this.replyTo == null) {
+                    this.messages.push("You have no one whom you can reply to");
+                } else {
+                    var message = "";
+                    for (var i = 1; i < sp.length; i++) {
+                        message += sp[i] + " ";
+                    }
+                    this.socket.emit("msguser", {to:this.replyTo, message:message});
+                    this.messages.push("[" + this.clientlist[this.clientid] + " \u2192 " + this.replyTo + "] " + message);
                 }
             }
         } else {
@@ -464,4 +490,9 @@ Interface.prototype.getClientByName = function(name) {
         }
     }
     return null;
+};
+
+Interface.prototype.sentPing = function() {
+    pingtime = new Date().getTime();
+    this.socket.emit("ping", "");
 };

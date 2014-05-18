@@ -38,7 +38,7 @@ function init() {
     gs = new GameState(2, 15, 15);
     
     // Connect to server with Socket.IO
-    var socket = io.connect("http://localhost:5000");
+    var socket = io.connect("http://<%= host %>:<%= port %>");
     
     // Create the interface
     var canvas = document.getElementById("canvas");

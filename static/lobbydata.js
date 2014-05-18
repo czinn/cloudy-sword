@@ -284,9 +284,14 @@ LobbyData.prototype.updateGames = function(ids) {
     this.io.sockets.in("lobby").emit("gamelist", summaries);
 };
 
-/** Checks whether a name is already in use */
+/** Checks whether a name is already in use
+  * Doubles as a name validity checker */
 LobbyData.prototype.isNameUsed = function(name) {
     if(name == "console")
+        return true;
+        
+    var regex = /^[-a-z0-9]+$/i;
+    if(!regex.test(name))
         return true;
         
     for(var i in this.clients) {

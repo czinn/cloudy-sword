@@ -63,9 +63,8 @@ var Interface = function(canvas, gs, socket) {
         _this.uistate = 0; // Switch to lobby
         _this.sendPing();
     });
-    socket.on("pong", function() {
-        _this.messages.push("Received pong event: " + data.msg);
-        _this.messages.push("Ping time: " + (new Date().getTime() - pingtime) + "ms.");
+    socket.on("pong", function(data) {
+        _this.messages.push("Ping: " + (new Date().getTime() - _this.pingtime) + "ms.");
     });
     socket.on("disconnect", function() {
         _this.messages.push("Disconnected from the server.");
@@ -103,10 +102,12 @@ var Interface = function(canvas, gs, socket) {
                         _this.messages.push(_this.clientlist[i] + " has left the room");
                         delete _this.clientlist[i];
                     } else {
-                        _this.clientlist[i] = data[i];
-                        if (_this.clientlist[i] != data.full) {
-                            _this.messages.push(_this.clientlist[i] + " has joined the room");
+                        if(typeof _this.clientlist[i] === "undefined") { // Only do join message if the client is a new client
+                            if (i != "full") {
+                                _this.messages.push(data[i] + " has joined the room");
+                            }
                         }
+                        _this.clientlist[i] = data[i];
                     }
                 }
             }
@@ -209,8 +210,8 @@ var Interface = function(canvas, gs, socket) {
     window.onresize = this.resize;
     // Key press
     window.onkeypress = function(e) {
-		if(!e) e = window.event;
-		var key = e.keyCode || e.which;
+        if(!e) e = window.event;
+        var key = e.keyCode || e.which;
         
         // Ensure that the chat box isn't selected
         if(document.activeElement == document.getElementById("chat"))
@@ -342,9 +343,9 @@ Interface.prototype.render = function() {
         // Indicate what playingAs is
         ctx.fillStyle = "#DDDDDD";
         if(this.playingAs != -1) {
-            ctx.fillText("You are player " + this.playingAs, 10, this.canvas.height - 30);
+            ctx.fillText("You are Player " + (this.playingAs + 1), 10, this.canvas.height - 50);
         } else {
-            ctx.fillText("You are spectating", 10, this.canvas.height - 30);
+            ctx.fillText("You are spectating", 10, this.canvas.height - 50);
         }
     }
     
@@ -359,7 +360,17 @@ Interface.prototype.render = function() {
     var k = 0;
     for(var i in this.clientlist) {
         if(this.clientlist.hasOwnProperty(i)) {
-            ctx.fillText(this.clientlist[i], 5, 500 + 30 * k);
+            var ctext = this.clientlist[i];
+            if(i == this.clientid) {
+                ctext += " (You)";
+            } else if(this.uistate == 1) { // In-game
+                // See what player in the game this player is
+                var ingameid = this.gs.hasPlayer(i);
+                if(ingameid != -1) {
+                    ctext += " (Player " + (ingameid + 1) + ")";
+                }
+            }
+            ctx.fillText(ctext, 5, 400 + 30 * k);
             k++;
         }
     };
@@ -453,7 +464,8 @@ Interface.prototype.processChat = function(chat) {
             }
             this.messages.push("Chat cleared");
         } else if(sp[0] == "/name") {
-            if(sp.length > 1 && (sp[1].length > 3 || sp[1] == "Sam")) {
+            var regex = /^[-a-z0-9]+$/i;
+            if(sp.length > 1 && (sp[1].length > 3 || sp[1] == "Sam") && regex.test(sp[1])) {
                 this.socket.emit("changename", sp[1]);
             }
         } else if (sp[0] == "/msg") {
@@ -507,7 +519,7 @@ Interface.prototype.getClientByName = function(name) {
     return null;
 };
 
-Interface.prototype.sentPing = function() {
-    pingtime = new Date().getTime();
-    this.socket.emit("ping", "");
+Interface.prototype.sendPing = function() {
+    this.pingtime = new Date().getTime();
+    this.socket.emit("ping", {});
 };

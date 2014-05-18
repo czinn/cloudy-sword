@@ -11,13 +11,6 @@ var app = express();
 app.use("/static", express.static(__dirname + "/static"));
 app.use(favicon(__dirname + "/static/favicon.ico"));
 
-/* ------------ GAME STUFF ------------ */
-// Create a lobby data object
-var lobby = new LobbyData();
-// Create some games in it
-lobby.addGame({rows: 25, cols: 25});
-lobby.addGame({});
-
 /* ------------ APPLICATION PAGES ------------ */
 app.get("/", function(req, res) {
     res.sendfile(__dirname + "/views/index.html");
@@ -51,3 +44,10 @@ io.sockets.on("connection", function(socket) {
         io.sockets.emit(data.channel, data.message);
     });
 });
+
+/* ------------ GAME STUFF ------------ */
+// Create a lobby data object
+var lobby = new LobbyData(io);
+// Create some games in it
+lobby.addGame({rows: 25, cols: 25});
+lobby.addGame({});

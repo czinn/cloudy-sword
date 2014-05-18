@@ -26,8 +26,6 @@ var GameState = function(players, rows, columns) {
     for(var i = 0; i < this.numPlayers; i++) {
         this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "race", "class"));
     }
-    
-    this.clearTurn();
 };
 
 /** Counts the number of players currently in the game */
@@ -66,13 +64,14 @@ GameState.prototype.removePlayer = function(id) {
     }
 };
 
-/** Checks whether the given player is in the game */
+/** Checks whether the given player is in the game
+  * Returns that player's in-game id */
 GameState.prototype.hasPlayer = function(id) {
     for(var i = 0; i < this.players.length; i++) {
         if(this.players[i] == id)
-            return true;
+            return i;
     }
-    return false;
+    return -1;
 };
 
 /** Dumps the game state to a simpler JavaScript object
@@ -103,44 +102,33 @@ GameState.prototype.update = function(obj) {
     }
 };
 
-/** Clears the local turn.
-  * The local turn is a compilation of actions/changes that have been made since it was last cleared.
-  * This change record can be sent to the server as a move or sent to clients as an update before being cleared.
-  * All relevant changes to the game state should be reflected in the current turn
-  */
-GameState.prototype.clearTurn = function() {
-    // For now, the flip array is a list of tiles to be flipped (since that's the only action right now)
-    this.localTurn = [];
-};
-
-/** Applies the given turn object to the state
-  * Used to change from one state to a new, similar state, so that the server doesn't have to resend all data
-  */
-GameState.prototype.doTurn = function(obj) {
-    // Obj is a list of actions to do; they are actually performed using doAction   
-    for(var i = 0; i < obj.length; i++) {
-        // Do the action without adding to localTurn
-        this.doAction(obj[i], false);
-    }
-};
-
-/** Does an action; updates the game state.
-  * Adds the action to localTurn iff addLocal is not false */
-GameState.prototype.doAction = function(action, addLocal) {
-    // Action is a tile containing a unit and the direction to move it
-    // Direction is of the form {x: x_change, y: y_change}
-    var tile = action.tile;
-    var dir = action.dir;
-    
-    var unit = this.map.tileUnit(tile);
-    if(unit != null) {
-        unit.pos.x += dir.x;
-        unit.pos.y += dir.y;
+/** Checks whether the given action is a valid action for the given player */
+GameState.prototype.validAction = function(action, player) {
+    if(action.type == "move") {
+        var tile = action.tile;
+        var dir = action.dir;
+        var target = {x: tile.x + dir.x, y: tile.y + dir.y};
+        var unit = this.map.tileUnit(tile);
+        if(unit != null && unit.controller == player && this.map.tileWalkable(target))
+            return true;
     }
     
-    if(typeof addLocal === "undefined" || addLocal) {
-        // Add the tile to localTurn
-        this.localTurn.push(action);
+    return false;
+};
+
+/** Does an action; updates the game state. */
+GameState.prototype.doAction = function(action) {
+    if(action.type == "move") {
+        // Action is a tile containing a unit and the direction to move it
+        // Direction is of the form {x: x_change, y: y_change}
+        var tile = action.tile;
+        var dir = action.dir;
+        
+        var unit = this.map.tileUnit(tile);
+        if(unit != null) {
+            unit.pos.x += dir.x;
+            unit.pos.y += dir.y;
+        }
     }
 };
 

@@ -6,7 +6,8 @@
   "dependencies": {
     "socket.io": "^0.9.16",
     "express": "4.1.2",
-	"serve-favicon": "2.0.0"
+    "serve-favicon": "2.0.0",
+    "moniker": "0.1.2"
   },
   "devDependencies": {},
   "scripts": {

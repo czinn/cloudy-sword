@@ -37,11 +37,14 @@ var Interface = function(canvas, gs, socket) {
     this.offsetx = 200;
     this.offsety = 0;
     this.scale = 1.0;
+    this.clientid = -1; // What our id is
     this.playingAs = -1; // Whether or not we are actually playing in the current game
     this.selectedTile = {x: -1, y: -1}; // Currently selected tile
     
     // Game list
     this.gamelist = {};
+    // Client list
+    this.clientlist = {};
     
     // Ping time for pinging
     var pingtime = 0;
@@ -73,9 +76,9 @@ var Interface = function(canvas, gs, socket) {
         // Update the game state
         _this.gs.update(data);
     });
-    socket.on("turn", function(data) {
-        // Update with the turn data
-        _this.gs.doTurn(data);
+    socket.on("action", function(data) {
+        // Update with the action
+        _this.gs.doAction(data);
     });
     socket.on("gamelist", function(data) {
         // Update the local list of games
@@ -84,6 +87,25 @@ var Interface = function(canvas, gs, socket) {
                 _this.gamelist[i] = data[i];
             }
         }
+    });
+    socket.on("clientid", function(data) {
+        _this.clientid = data;
+    });
+    socket.on("clientlist", function(data) {
+        if(data.full) { // Whether the update is a full list, or just an update
+            _this.clientlist = data;
+        } else {
+            for(var i in data) {
+                if(data.hasOwnProperty(i)) {
+                    if(data[i] == null) {
+                        delete _this.clientlist[i];
+                    } else {
+                        _this.clientlist[i] = data[i];
+                    }
+                }
+            }
+        }
+        delete _this.clientlist["full"];
     });
     socket.on("kick", function(data) { // Kicked out of game room
         _this.uistate = 0; // Switch to lobby
@@ -118,7 +140,7 @@ var Interface = function(canvas, gs, socket) {
             }
         } else if(_this.uistate == 1) { // In-game
             if(!_this.dragging) {
-                var tile = _this.gs.map.hexAtTransformed(mx, my, 10, 10, _this.offsetx, _this.offsety, _this.scale);
+                var tile = _this.gs.map.hexAtTransformed(mx, my, 0, 0, _this.offsetx, _this.offsety, _this.scale);
                 if(tile.x >= 0 && tile.x < _this.gs.map.cols() && tile.y >= 0 && tile.y < _this.gs.map.rows()) {
                     _this.clickTile(tile);
                 }
@@ -160,7 +182,7 @@ var Interface = function(canvas, gs, socket) {
         //alert(delta);
         if(_this.uistate == 1) { // In-game
             _this.scale += delta * 0.1;
-            if(_this.scale < 0.3) _this.scale = 0.3;
+            if(_this.scale < 0.2) _this.scale = 0.2;
             if(_this.scale > 2.0) _this.scale = 2.0;
         }
     }
@@ -179,34 +201,38 @@ var Interface = function(canvas, gs, socket) {
             // Get the unit at the cursor
             var unit = _this.gs.map.tileUnit(_this.selectedTile);
             var tile = {x: _this.selectedTile.x, y: _this.selectedTile.y};
+            var action = null;
             if(unit != null && unit.controller == _this.playingAs) {
                 if(key == 119) { // W
-                    _this.gs.doAction({tile: tile, dir: {x: 0, y: -1}});
-                    _this.moveSelected(0, -1);
+                    action = {type: "move", tile: tile, dir: {x: 0, y: -1}};
                 }
                 if(key == 101) { // E
-                    _this.gs.doAction({tile: tile, dir: {x: 1, y: -1}});
-                    _this.moveSelected(1, -1);
+                    action = {type: "move", tile: tile, dir: {x: 1, y: -1}};
                 }
                 if(key == 97) { //A
-                    _this.gs.doAction({tile: tile, dir: {x: -1, y: 0}});
-                    _this.moveSelected(-1, 0);
+                    action = {type: "move", tile: tile, dir: {x: -1, y: 0}};
                 }
                 if(key == 100) { //D
-                    _this.gs.doAction({tile: tile, dir: {x: 1, y: 0}});
-                    _this.moveSelected(1, 0);
+                    action = {type: "move", tile: tile, dir: {x: 1, y: 0}};
                 }
                 if(key == 122) { //Z
-                    _this.gs.doAction({tile: tile, dir: {x: -1, y: 1}});
-                    _this.moveSelected(-1, 1);
+                    action = {type: "move", tile: tile, dir: {x: -1, y: 1}};
                 }
                 if(key == 120) { //X
-                    _this.gs.doAction({tile: tile, dir: {x: 0, y: 1}});
-                    _this.moveSelected(0, 1);
+                    action = {type: "move", tile: tile, dir: {x: 0, y: 1}};
                 }
-                // Immediately send the turn to the server (just temp)
-                _this.socket.emit("turn", gs.localTurn);
-                _this.gs.clearTurn();
+                if(action == null) // The key press wasn't a move action
+                    return;
+                    
+                // Check if the action is valid
+                if(_this.gs.validAction(action, _this.playingAs)) {
+                    // Move the cursor
+                    _this.selectedTile = {x: action.tile.x + action.dir.x, y: action.tile.y + action.dir.y};
+                    // Do the action locally
+                    _this.gs.doAction(action);
+                    // Send the action to the server
+                    _this.socket.emit("action", action);
+                }
             }
         }
         
@@ -223,7 +249,11 @@ var Interface = function(canvas, gs, socket) {
   */
 Interface.prototype.clickTile = function(tile) {
     if(this.uistate == 1) { // In-game
-        this.selectedTile = tile;
+        if(this.gs.map.onGrid(tile)) {
+            this.selectedTile = tile;
+        } else {
+            this.selectedTile = {x: -1, y: -1};
+        }
     }
 };
 
@@ -291,19 +321,28 @@ Interface.prototype.render = function() {
     }
     
     // Draw messages
-    ctx.fillStyle = "#FF0000";
+    ctx.fillStyle = "#DDDDDD";
     ctx.font = "20px Arial";
     for(var i = 0; i < this.messages.length; i++) {
         ctx.fillText(this.messages[i], 5, 30+i * 30);
     }
+    
+    // Draw users in this room
+    var k = 0;
+    for(var i in this.clientlist) {
+        if(this.clientlist.hasOwnProperty(i)) {
+            ctx.fillText(this.clientlist[i], 5, 500 + 30 * k);
+            k++;
+        }
+    };
 };
 
 Interface.prototype.renderMap = function(ctx) {
     var map = this.gs.map;
-    var x = 10;
-    var y = 10;
-    var width = this.canvas.width - 10;
-    var height = this.canvas.height - 10;
+    var x = 0;
+    var y = 0;
+    var width = this.canvas.width;
+    var height = this.canvas.height;
     var offsetx = this.offsetx;
     var offsety = this.offsety;
     var scale = this.scale;
@@ -351,38 +390,47 @@ Interface.prototype.renderMap = function(ctx) {
     }
     
     // Go back and draw the selected ring
-    var hexx = (this.selectedTile.x + this.selectedTile.y / 2) * w - offsetx;
-    var hexy = (this.selectedTile.y * 3 / 4) * h - offsety;
-    // Check if the hexagon is in the window
-    if(hexx + w >= 0 && hexx <= width && hexy + h >= 0 && hexy <= height) {
-        ctx.strokeStyle = "#FF0000";
-        
-        ctx.beginPath();
-        ctx.moveTo(x + hexx, y + hexy + h / 4);
-        ctx.lineTo(x + hexx + w / 2, y + hexy);
-        ctx.lineTo(x + hexx + w, y + hexy + h / 4);
-        ctx.lineTo(x + hexx + w, y + hexy + h * 3 / 4);
-        ctx.lineTo(x + hexx + w / 2, y + hexy + h);
-        ctx.lineTo(x + hexx, y + hexy + h * 3 / 4);
-        ctx.lineTo(x + hexx, y + hexy + h / 4);
-        
-        ctx.stroke();
+    if(this.selectedTile.x >= 0) {
+        var hexx = (this.selectedTile.x + this.selectedTile.y / 2) * w - offsetx;
+        var hexy = (this.selectedTile.y * 3 / 4) * h - offsety;
+        // Check if the hexagon is in the window
+        if(hexx + w >= 0 && hexx <= width && hexy + h >= 0 && hexy <= height) {
+            ctx.strokeStyle = "#FF0000";
+            
+            ctx.beginPath();
+            ctx.moveTo(x + hexx, y + hexy + h / 4);
+            ctx.lineTo(x + hexx + w / 2, y + hexy);
+            ctx.lineTo(x + hexx + w, y + hexy + h / 4);
+            ctx.lineTo(x + hexx + w, y + hexy + h * 3 / 4);
+            ctx.lineTo(x + hexx + w / 2, y + hexy + h);
+            ctx.lineTo(x + hexx, y + hexy + h * 3 / 4);
+            ctx.lineTo(x + hexx, y + hexy + h / 4);
+            
+            ctx.stroke();
+        }
     }
 };
 
 Interface.prototype.processChat = function(chat) {
-    if (chat == "/help") {
-        this.messages.push("+=+=+=+=+Help+=+=+=+=+");
-        this.messages.push("/clear - Clears the chat window");
-    } else if (chat == "/clear") {
-        while(this.messages.length > 0) {
-            this.messages.pop();
+    if(chat.charAt(0) == "/") {
+        var sp = chat.split(" ");
+        if (sp[0] == "/help") {
+            this.messages.push("+=+=+=+=+Help+=+=+=+=+");
+            this.messages.push("/clear - Clears the chat window");
+        } else if (sp[0] == "/clear") {
+            while(this.messages.length > 0) {
+                this.messages.pop();
+            }
+            this.messages.push("Chat cleared");
+        } else if(sp[0] == "/name") {
+            if(sp.length > 1 && sp[1].length > 3) {
+                this.socket.emit("changename", sp[1]);
+            }
+        } else {
+            this.messages.push("Unknown command. Type /help for help");
         }
-        this.messages.push("Chat cleared");
-    } else if (chat.charAt(0) == "/") {
-        this.messages.push("Unknown command. Type /help for help");
     } else {
         this.socket.emit("clientchat", chat);
-        this.messages.push(this.playingAs + ": " + chat);
+        this.messages.push(this.clientlist[this.clientid] + ": " + chat);
     }
 };

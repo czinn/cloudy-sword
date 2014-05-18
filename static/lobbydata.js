@@ -106,14 +106,16 @@ LobbyData.prototype.addClient = function(socket) {
     
     socket.on("changename", function(data) { // data is new name
         // Ensure name is long enough
-        if(data.length > 3) {
+        if(data.length > 3 || data == "Sam") {
             // Check that the new name is not already used
             if(!_this.isNameUsed(data)) {
+                var oldName = client.name;
                 // Change their name
                 client.name = data;
                 
                 // Send the update to everyone in their room
                 _this.updateClients(client.roomName(), [client.id]);
+                _this.io.sockets.in(client.roomName()).emit("message", oldName + " is now " + data);
             }
         }
     });

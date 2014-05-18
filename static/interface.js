@@ -198,41 +198,43 @@ var Interface = function(canvas, gs, socket) {
 		var key = e.keyCode || e.which;
         
         if(_this.uistate == 1) { // In-game
-            // Get the unit at the cursor
-            var unit = _this.gs.map.tileUnit(_this.selectedTile);
+            // Make a copy of the tile so that it doesn't cause pointer issues
             var tile = {x: _this.selectedTile.x, y: _this.selectedTile.y};
             var action = null;
-            if(unit != null && unit.controller == _this.playingAs) {
-                if(key == 119) { // W
-                    action = {type: "move", tile: tile, dir: {x: 0, y: -1}};
-                }
-                if(key == 101) { // E
-                    action = {type: "move", tile: tile, dir: {x: 1, y: -1}};
-                }
-                if(key == 97) { //A
-                    action = {type: "move", tile: tile, dir: {x: -1, y: 0}};
-                }
-                if(key == 100) { //D
-                    action = {type: "move", tile: tile, dir: {x: 1, y: 0}};
-                }
-                if(key == 122) { //Z
-                    action = {type: "move", tile: tile, dir: {x: -1, y: 1}};
-                }
-                if(key == 120) { //X
-                    action = {type: "move", tile: tile, dir: {x: 0, y: 1}};
-                }
-                if(action == null) // The key press wasn't a move action
-                    return;
-                    
-                // Check if the action is valid
-                if(_this.gs.validAction(action, _this.playingAs)) {
-                    // Move the cursor
-                    _this.selectedTile = {x: action.tile.x + action.dir.x, y: action.tile.y + action.dir.y};
-                    // Do the action locally
-                    _this.gs.doAction(action);
-                    // Send the action to the server
-                    _this.socket.emit("action", action);
-                }
+            if(key == 108) { // L (exit to lobby)
+                _this.uistate = 0;
+                _this.socket.emit("leavegame");
+                return;
+            }
+            if(key == 119) { // W
+                action = {type: "move", tile: tile, dir: {x: 0, y: -1}};
+            }
+            if(key == 101) { // E
+                action = {type: "move", tile: tile, dir: {x: 1, y: -1}};
+            }
+            if(key == 97) { //A
+                action = {type: "move", tile: tile, dir: {x: -1, y: 0}};
+            }
+            if(key == 100) { //D
+                action = {type: "move", tile: tile, dir: {x: 1, y: 0}};
+            }
+            if(key == 122) { //Z
+                action = {type: "move", tile: tile, dir: {x: -1, y: 1}};
+            }
+            if(key == 120) { //X
+                action = {type: "move", tile: tile, dir: {x: 0, y: 1}};
+            }
+            if(action == null) // The key press wasn't a move action
+                return;
+                
+            // Check if the action is valid
+            if(_this.gs.validAction(action, _this.playingAs)) {
+                // Move the cursor
+                _this.selectedTile = {x: action.tile.x + action.dir.x, y: action.tile.y + action.dir.y};
+                // Do the action locally
+                _this.gs.doAction(action);
+                // Send the action to the server
+                _this.socket.emit("action", action);
             }
         }
         

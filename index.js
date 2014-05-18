@@ -53,8 +53,7 @@ var _this = this;
 
 /* ------------ CONSOLE --------------- */
 process.stdin.on('data', function (text) {
-    var command = util.inspect(text).substring(1, util.inspect(text).length-5);
-    var args = command.split(" ");
+    var args = text.split(/\s+/);
     if (args[0] == "?" || args[0] == "help") {
         console.log("XxXxXx--HELP--xXxXxX");
         console.log("quit - Exit cloudy-sword");

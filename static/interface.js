@@ -200,11 +200,18 @@ var Interface = function(canvas, gs, socket) {
         // Ensure that the chat box isn't selected
         if(document.activeElement == document.getElementById("chat"))
             return;
+            
+        // UI State independent keys
+        if(key == 13) { // Enter
+            // Focus the chat
+            document.getElementById("chat").focus();
+        }
         
         if(_this.uistate == 1) { // In-game
             // Make a copy of the tile so that it doesn't cause pointer issues
             var tile = {x: _this.selectedTile.x, y: _this.selectedTile.y};
             var action = null;
+            
             if(key == 108) { // L (exit to lobby)
                 _this.uistate = 0;
                 _this.socket.emit("leavegame");

@@ -197,6 +197,10 @@ var Interface = function(canvas, gs, socket) {
 		if(!e) e = window.event;
 		var key = e.keyCode || e.which;
         
+        // Ensure that the chat box isn't selected
+        if(document.activeElement == document.getElementById("chat"))
+            return;
+        
         if(_this.uistate == 1) { // In-game
             // Make a copy of the tile so that it doesn't cause pointer issues
             var tile = {x: _this.selectedTile.x, y: _this.selectedTile.y};

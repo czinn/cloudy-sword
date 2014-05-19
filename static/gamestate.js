@@ -26,7 +26,7 @@ var GameState = function(players, rows, columns) {
     
     // Add a test unit for each player
     for(var i = 0; i < this.numPlayers; i++) {
-        this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "lizard", "wizard"));
+        this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "gnome", "wizard"));
     }
 };
 

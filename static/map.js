@@ -207,7 +207,7 @@ Map.prototype.load = function(obj) {
     
     this.units = [];
     for(var i = 0; i < obj.units.length; i++) {
-        var unit = new Unit(null, -1, "null", "null");
+        var unit = new Unit(null, -1, "gnome", "wizard");
         unit.load(obj.units[i]);
         this.units.push(unit);
     }

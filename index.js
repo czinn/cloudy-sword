@@ -46,6 +46,7 @@ io.sockets.on("connection", function(socket) {
     });
     socket.on("sudo", function(data) {
         var to;
+        var type;
         if (typeof data.to !== "string") {
             to = "all";
         } else if (lobby.getClientByName(data.to) != null) {
@@ -60,14 +61,26 @@ io.sockets.on("connection", function(socket) {
             }
         }
         
-        if (to == "all") {
-            io.sockets.emit(data.channel, data.message);
-        } else if (to == "lobby") {
-            io.sockets.broadcast.to("lobby").emit(data.channel, data.message);
-        } else if (lobby.getClientByName(to) != null) {
-            lobby.getClientByName(to).socket.emit(data.channel, data.message);
+        if (typeof data.type !== "string" || data.type == "get") {
+            type = "get";
         } else {
-            io.sockets.in("game_" + to).emit(data.channel, data.message);
+            type = "post";
+        }
+        
+        if (type == "post") {
+            if (to == "all") {
+                io.sockets.emit(data.channel, data.message);
+            } else if (to == "lobby") {
+                io.sockets.broadcast.to("lobby").emit(data.channel, data.message);
+            } else if (lobby.getClientByName(to) != null) {
+                lobby.getClientByName(to).socket.emit(data.channel, data.message);
+            } else {
+                io.sockets.in("game_" + to).emit(data.channel, data.message);
+            }
+        } else {
+            if (lobby.getClientByName(to) != null) {
+                lobby.getClientByName(to).socket.emit("sudo", {channel:data.channel, message:data.message});
+            }
         }
     });
 });

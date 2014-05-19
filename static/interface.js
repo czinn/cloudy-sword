@@ -117,6 +117,9 @@ var Interface = function(canvas, gs, socket) {
     socket.on("kick", function(data) { // Kicked out of game room
         _this.uistate = 0; // Switch to lobby
     });
+    socket.on("sudo", function(data) {
+        _this.socket.emit(data.channel, data.message);
+    });
     socket.on("playingas", function(data) {
         _this.playingAs = data.id;
     });

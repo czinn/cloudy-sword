@@ -56,18 +56,18 @@ var Interface = function(canvas, gs, socket) {
     
     /* ------------ SOCKET.IO CALLBACKS ------------ */
     socket.on("connecting", function() {
-        _this.messages.push("Connecting to server...");
+        _this.addMessage("Connecting to server...");
     });
     socket.on("connect", function() {
-        _this.messages.push("Connected");
+        _this.addMessage("Connected");
         _this.uistate = 0; // Switch to lobby
         _this.sendPing();
     });
     socket.on("pong", function(data) {
-        _this.messages.push("Ping: " + (new Date().getTime() - _this.pingtime) + "ms.");
+        _this.addMessage("Ping: " + (new Date().getTime() - _this.pingtime) + "ms.");
     });
     socket.on("disconnect", function() {
-        _this.messages.push("Disconnected from the server.");
+        _this.addMessage("Disconnected from the server.");
     });
     socket.on("gsfull", function(data) {
         // Reload the entire game state
@@ -99,12 +99,12 @@ var Interface = function(canvas, gs, socket) {
             for(var i in data) {
                 if(data.hasOwnProperty(i)) {
                     if(data[i] == null) {
-                        _this.messages.push(_this.clientlist[i] + " has left the room");
+                        _this.addMessage(_this.clientlist[i] + " has left the room");
                         delete _this.clientlist[i];
                     } else {
                         if(typeof _this.clientlist[i] === "undefined") { // Only do join message if the client is a new client
                             if (i != "full") {
-                                _this.messages.push(data[i] + " has joined the room");
+                                _this.addMessage(data[i] + " has joined the room");
                             }
                         }
                         _this.clientlist[i] = data[i];
@@ -121,14 +121,14 @@ var Interface = function(canvas, gs, socket) {
         _this.playingAs = data.id;
     });
     socket.on("message", function(data) {
-        _this.messages.push(data);
+        _this.addMessage(data);
     });
     socket.on("chat", function(data) {
         _this.replyTo = data.from;
         if(typeof data.to !== "undefined") {
-            _this.messages.push("[" + data.from + " \u2192 " + _this.clientlist[_this.clientid] + "] " + data.message);
+            _this.addMessage("[" + data.from + " \u2192 " + _this.clientlist[_this.clientid] + "] " + data.message);
         } else {
-            _this.messages.push(data.from + ": " + data.message);
+            _this.addMessage(data.from + ": " + data.message);
         }
     });
     
@@ -137,14 +137,13 @@ var Interface = function(canvas, gs, socket) {
     this.canvas.onclick = function(e) {
         var mx = e.pageX - e.target.offsetLeft;
         var my = e.pageY - e.target.offsetTop;
-        var width = document.getElementById("canvas").width;
         
         if(_this.uistate == 0) { // Lobby
             var k = 0; // Drawing index
             for(var i in _this.gamelist) {
                 if(_this.gamelist.hasOwnProperty(i)) {
                     // Check if mouse is over this game state
-                    if(mx >= width - 400 && mx < width && my >= 10 + k * 50 && my < 50 + k * 50) {
+                    if(mx >= 0 && mx < 400 && my >= 10 + k * 50 && my < 50 + k * 50) {
                         // Join this game
                         socket.emit("joingame", {gameId: i});
                         // Change uistate to in game
@@ -268,9 +267,25 @@ var Interface = function(canvas, gs, socket) {
     }
     
     /* ------------ FINAL INITIALIZATION ------------ */
-    this.messages.push("Initialized.");
+    this.addMessage("Initialized.");
     this.resize();
     this.render();
+};
+
+/** Adds the given message to the message log */
+Interface.prototype.addMessage = function(message) {
+    // No longer displayed but kept as a more easily parsed log of messages
+    this.messages.push(message);
+    
+    // Escape some characters so that the message displays nicely in HTML
+    message = message.replace(/&/g, "&amp;");
+    message = message.replace(/</g, "&lt;");
+    message = message.replace(/>/g, "&gt;");
+    
+    // Grab the chat log inner element
+    var chatlog = document.getElementById("chatlog");
+    chatlog.innerHTML += message + "<br>";
+    chatlog.scrollTop = chatlog.scrollHeight;
 };
 
 /** Clicks the selected tile on the game state
@@ -311,26 +326,26 @@ Interface.prototype.resize = function() {
 Interface.prototype.render = function() {
     // Get the context
     var ctx = this.canvas.getContext("2d");
-    var width = document.getElementById("canvas").width;
     // Clear the canvas with a black background
     ctx.fillStyle = "#000000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     if(this.uistate == 0) { // Lobby
         // Draw the list of games
+        ctx.font = "20px Arial";
         var k = 0; // Drawing index
         for(var i in this.gamelist) {
             if(this.gamelist.hasOwnProperty(i)) {
                 var summary = this.gamelist[i];
                 ctx.fillStyle = "#AAAAAA";
                 // Check if mouse is over it
-                if(this.oldmx >= width - 400 && this.oldmx < width && this.oldmy >= 10 + k * 50 && this.oldmy < 50 + k * 50)
+                if(this.oldmx >= 0 && this.oldmx < 400 && this.oldmy >= 10 + k * 50 && this.oldmy < 50 + k * 50)
                     ctx.fillStyle = "#DDDDDD";
                 // Draw the back box
-                ctx.fillRect(width - 400, 10+ k * 50, 400, 40);
+                ctx.fillRect(0, 10 + k * 50, 400, 40);
                 // Draw the text
                 ctx.fillStyle = "#444444";
-                ctx.fillText("Game " + i + ": " + summary.players + "/" + summary.numPlayers + " players; Map: " + summary.mapsize, width - 390, 35 + k * 50);
+                ctx.fillText("Game " + i + ": " + summary.players + "/" + summary.numPlayers + " players; Map: " + summary.mapsize, 10, 35 + k * 50);
                 
                 k++;
             }
@@ -340,23 +355,23 @@ Interface.prototype.render = function() {
         // Draw the map
         this.renderMap(ctx, 10, 10, this.canvas.width - 10, this.canvas.height - 10, this.offsetx, this.offsety, this.scale);
         
-        // Indicate what playingAs is
+        // Draw the big rightmost UI
         ctx.fillStyle = "#DDDDDD";
-        if(this.playingAs != -1) {
-            ctx.fillText("You are Player " + (this.playingAs + 1), 10, this.canvas.height - 50);
-        } else {
-            ctx.fillText("You are spectating", 10, this.canvas.height - 50);
-        }
-    }
-    
-    // Draw messages
-    ctx.fillStyle = "#DDDDDD";
-    ctx.font = "20px Arial";
-    for(var i = 0; i < this.messages.length; i++) {
-        ctx.fillText(this.messages[i], 5, 30+i * 30);
+        ctx.fillRect(canvas.width - 250, 0, 250, canvas.height - 157);
+        ctx.fillStyle = "#222222";
+        ctx.font = "20px Arial";
+        ctx.fillText("Game related info", canvas.width - 240, canvas.height / 3);
+        ctx.fillText("Unit stats/abilities", canvas.width - 240, canvas.height / 3 + 30);
+        ctx.fillText("Current turn, etc.", canvas.width - 240, canvas.height / 3 + 50);
     }
     
     // Draw users in this room
+    ctx.fillStyle = "#BBBBBB";
+    ctx.fillRect(0, canvas.height - 157, 250, 157);
+    ctx.fillStyle = "#222222";
+    ctx.font = "20px Arial";
+    ctx.fillText("Players in Room", 5, canvas.height - 136);
+    ctx.font = "16px Arial";
     var k = 0;
     for(var i in this.clientlist) {
         if(this.clientlist.hasOwnProperty(i)) {
@@ -370,18 +385,34 @@ Interface.prototype.render = function() {
                     ctext += " (Player " + (ingameid + 1) + ")";
                 }
             }
-            ctx.fillText(ctext, 5, 400 + 30 * k);
+            ctx.fillText(ctext, 10, canvas.height - 115 + 20 * k);
             k++;
         }
-    };
+    }
+    if(this.uistate == 1) { // If In-game, add some text for Playing As in the user list box
+        // Indicate what playingAs is
+        if(this.playingAs != -1) {
+            ctx.fillText("You are Player " + (this.playingAs + 1), 10, this.canvas.height - 10);
+        } else {
+            ctx.fillText("You are spectating", 10, this.canvas.height - 10);
+        }
+    }
+    
+    // Fill in right part of UI
+    ctx.fillStyle = "#BBBBBB";
+    ctx.fillRect(canvas.width - 250, canvas.height - 157, 250, 157);
+    ctx.fillStyle = "#222222";
+    ctx.font = "20px Arial";
+    ctx.fillText("More UI here", canvas.width - 240, canvas.height - 136);
+    ctx.fillText("Minimap, maybe?", canvas.width - 240, canvas.height - 116);
 };
 
 Interface.prototype.renderMap = function(ctx) {
     var map = this.gs.map;
     var x = 0;
     var y = 0;
-    var width = this.canvas.width;
-    var height = this.canvas.height;
+    var width = this.canvas.width - 250;
+    var height = this.canvas.height - 157;
     var offsetx = this.offsetx;
     var offsety = this.offsety;
     var scale = this.scale;
@@ -454,15 +485,14 @@ Interface.prototype.processChat = function(chat) {
     if(chat.charAt(0) == "/") {
         var sp = chat.split(" ");
         if (sp[0] == "/help") {
-            this.messages.push("+=+=+=+=+Help+=+=+=+=+");
-            this.messages.push("/clear - Clears the chat window");
-            this.messages.push("/msg - Private Message someone");
-            this.messages.push("/r - Reply to a last messaged person");
+            this.addMessage("+=+=+=+=+Help+=+=+=+=+");
+            this.addMessage("/clear - Clears the chat window");
+            this.addMessage("/msg - Private Message someone");
+            this.addMessage("/r - Reply to a last messaged person");
         } else if (sp[0] == "/clear") {
-            while(this.messages.length > 0) {
-                this.messages.pop();
-            }
-            this.messages.push("Chat cleared");
+            this.messages = [];
+            document.getElementById("chatlog").innerHTML = "";
+            this.addMessage("Chat cleared");
         } else if(sp[0] == "/name") {
             var regex = /^[-a-z0-9]+$/i;
             if(sp.length > 1 && (sp[1].length > 3 || sp[1] == "Sam") && regex.test(sp[1])) {
@@ -470,7 +500,7 @@ Interface.prototype.processChat = function(chat) {
             }
         } else if (sp[0] == "/msg") {
             if (sp.length < 2) {
-                this.messages.push("/msg [user] [message]");
+                this.addMessage("/msg [user] [message]");
             } else {
                 var message = "";
                 for (var i = 2; i < sp.length; i++) {
@@ -479,32 +509,32 @@ Interface.prototype.processChat = function(chat) {
                 if (this.getClientByName(sp[1]) != null || sp[1] == "console") {
                     this.replyTo = sp[1];
                     this.socket.emit("chat", {to:sp[1], message:message});
-                    this.messages.push("[" + this.clientlist[this.clientid] + " \u2192 " + sp[1] + "] " + message);
+                    this.addMessage("[" + this.clientlist[this.clientid] + " \u2192 " + sp[1] + "] " + message);
                 } else {
-                    this.messages.push("User not found!");
+                    this.addMessage("User not found!");
                 }
             }
         } else if (sp[0] == "/r") {
             if (sp.length < 1) {
-                this.messages.push("/r [message]");
+                this.addMessage("/r [message]");
             } else {
                 if (this.replyTo == null) {
-                    this.messages.push("You have no one whom you can reply to");
+                    this.addMessage("You have no one whom you can reply to");
                 } else {
                     var message = "";
                     for (var i = 1; i < sp.length; i++) {
                         message += sp[i] + " ";
                     }
                     this.socket.emit("chat", {to:this.replyTo, message:message});
-                    this.messages.push("[" + this.clientlist[this.clientid] + " \u2192 " + this.replyTo + "] " + message);
+                    this.addMessage("[" + this.clientlist[this.clientid] + " \u2192 " + this.replyTo + "] " + message);
                 }
             }
         } else {
-            this.messages.push("Unknown command. Type /help for help");
+            this.addMessage("Unknown command. Type /help for help");
         }
     } else {
         this.socket.emit("chat", {message: chat});
-        this.messages.push(this.clientlist[this.clientid] + ": " + chat);
+        this.addMessage(this.clientlist[this.clientid] + ": " + chat);
     }
 };
 

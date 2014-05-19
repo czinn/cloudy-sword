@@ -1,8 +1,29 @@
 #chat {
-    position:absolute;
-    min-width:100%;
+    background-color: #DDDDDD;
+    color: #222222;
+    position: absolute;
     font-size: 20px;
+    width: 100%;
+    padding: 2px 4px;
+}
+#chatlog {
+    background-color: #DDDDDD;
+    color: #222222;
+    position: absolute;
+    left: 250px;
+    right: 250px;
+    bottom: 32px;
+    height: 121px;
+    padding: 2px 4px;
+    overflow-y: scroll;
+    font-size: 20px;
+}
+#chatholder {
+    position:absolute;
+    left: 250px;
+    right: 250px;
     bottom: 0px;
+    height: 32px;
 }
 #canvas {
     position:absolute;
@@ -11,4 +32,5 @@
 * {
     margin: 0px;
     padding: 0px;
+    font-family: "Arial", Arial, sans;
 }

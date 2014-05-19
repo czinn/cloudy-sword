@@ -80,7 +80,7 @@ GameState.prototype.hasPlayer = function(id) {
   * This is used to send the state over the network.
   */
 GameState.prototype.dump = function() {
-    obj = {numPlayers: this.numPlayers, map: this.map, players: this.players};
+    obj = {numPlayers: this.numPlayers, map: this.map, players: this.players, turn: this.turn};
 
     return obj;
 };
@@ -90,6 +90,8 @@ GameState.prototype.load = function(obj) {
     this.numPlayers = obj.numPlayers;
     
     this.players = obj.players;
+    
+    this.turn = obj.turn;
     
     this.map = new Map(1, 1);
     this.map.load(obj.map);

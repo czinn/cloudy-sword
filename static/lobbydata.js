@@ -315,5 +315,7 @@ LobbyData.prototype.getClientByName = function(name) {
     return null;
 };
 
-
+LobbyData.prototype.countGames = function() {
+    return Object.keys(this.gamestates).length;
+};
 module.exports = LobbyData;

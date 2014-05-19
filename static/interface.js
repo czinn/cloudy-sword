@@ -207,6 +207,7 @@ var Interface = function(canvas, gs, socket) {
     
     /* ------------ WINDOW CALLBACKS ------------ */
     window.onresize = this.resize;
+    document.onselectstart = function() { return false; }; // Prevents cursor when dragging map
     // Key press
     window.onkeypress = function(e) {
         if(!e) e = window.event;
@@ -263,7 +264,6 @@ var Interface = function(canvas, gs, socket) {
                 _this.socket.emit("action", action);
             }
         }
-        
     }
     
     /* ------------ FINAL INITIALIZATION ------------ */

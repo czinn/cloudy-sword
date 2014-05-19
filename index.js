@@ -45,7 +45,30 @@ io.sockets.on("connection", function(socket) {
         socket.emit("pong", {});
     });
     socket.on("sudo", function(data) {
-        io.sockets.emit(data.channel, data.message);
+        var to;
+        if (typeof data.to !== "string") {
+            to = "all";
+        } else if (lobby.getClientByName(data.to) != null) {
+            to = data.to;
+        } else {
+            if (lobby.countGames() > parseInt(data.to)) {
+                to = data.to;
+            } else if (data.to == "lobby") {
+                to = "lobby";
+            } else {
+                to = "all";
+            }
+        }
+        
+        if (to == "all") {
+            io.sockets.emit(data.channel, data.message);
+        } else if (to == "lobby") {
+            io.sockets.broadcast.to("lobby").emit(data.channel, data.message);
+        } else if (lobby.getClientByName(to) != null) {
+            lobby.getClientByName(to).socket.emit(data.channel, data.message);
+        } else {
+            io.sockets.in("game_" + to).emit(data.channel, data.message);
+        }
     });
 });
 

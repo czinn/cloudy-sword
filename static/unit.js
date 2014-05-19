@@ -57,6 +57,16 @@ Unit.prototype.load = function(obj) {
     this.steps = obj.steps;
 };
 
+/** Returns a nicely formatted race name (capitalized, etc.) */
+Unit.prototype.raceName = function() {
+    return this.race.charAt(0).toUpperCase() + this.race.slice(1);
+};
+
+/** Returns a nicely formatted class name */
+Unit.prototype.className = function() {
+    return this.cls.charAt(0).toUpperCase() + this.cls.slice(1);
+};
+
 if(typeof exports !== "undefined") {
     module.exports = Unit;
 }

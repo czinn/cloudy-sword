@@ -22,9 +22,11 @@ var GameState = function(players, rows, columns) {
     
     this.numPlayers = players;
     
+    this.turn = 0; // player that is currently playing (not the turn count)
+    
     // Add a test unit for each player
     for(var i = 0; i < this.numPlayers; i++) {
-        this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "race", "class"));
+        this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "lizard", "wizard"));
     }
 };
 
@@ -104,13 +106,18 @@ GameState.prototype.update = function(obj) {
 
 /** Checks whether the given action is a valid action for the given player */
 GameState.prototype.validAction = function(action, player) {
-    if(action.type == "move") {
+    if(player != this.turn) return false; // Can't do stuff if it's not your turn!
+    
+    if(action.type == "move") { // Move action
         var tile = action.tile;
         var dir = action.dir;
         var target = {x: tile.x + dir.x, y: tile.y + dir.y};
         var unit = this.map.tileUnit(tile);
-        if(unit != null && unit.controller == player && this.map.tileWalkable(target))
+        if(unit != null && unit.controller == player && this.map.tileWalkable(target) && unit.steps < unit.speed)
             return true;
+    } else if(action.type = "end") { // End turn action
+        // End turn is always valid
+        return true;
     }
     
     return false;
@@ -118,7 +125,7 @@ GameState.prototype.validAction = function(action, player) {
 
 /** Does an action; updates the game state. */
 GameState.prototype.doAction = function(action) {
-    if(action.type == "move") {
+    if(action.type == "move") { // Move action
         // Action is a tile containing a unit and the direction to move it
         // Direction is of the form {x: x_change, y: y_change}
         var tile = action.tile;
@@ -128,7 +135,12 @@ GameState.prototype.doAction = function(action) {
         if(unit != null) {
             unit.pos.x += dir.x;
             unit.pos.y += dir.y;
+            unit.steps += 1;
         }
+    } else if(action.type == "end") { // End turn action
+        this.endTurn();
+        this.advanceTurn();
+        this.startTurn();
     }
 };
 
@@ -139,6 +151,31 @@ GameState.prototype.summary = function() {
         players: this.playersInGame(),
         mapsize: this.map.cols() + " x " + this.map.rows(),
     };
+};
+
+/** Does start of turn stuff for the current player */
+GameState.prototype.startTurn = function() {
+    // Reset the steps of each unit that the player controls
+    for(var i = 0; i < this.map.units.length; i++) {
+        var unit = this.map.units[i];
+        if(unit.controller == this.turn) {
+            // Reset steps
+            unit.steps = 0;
+        }
+    }
+};
+
+GameState.prototype.advanceTurn = function() {
+    // Advances the turn counter
+    this.turn++;
+    if(this.turn >= this.numPlayers) {
+        this.turn = 0;
+    }
+};
+
+/** Does end of turn stuff for the current player */
+GameState.prototype.endTurn = function() {
+    // Currently nothing happens at the end of a turn
 };
 
 if(typeof exports === "object") {

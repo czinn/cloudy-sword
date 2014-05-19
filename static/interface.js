@@ -234,30 +234,42 @@ var Interface = function(canvas, gs, socket) {
                 return;
             }
             if(key == 119) { // W
+                // Move up-left
                 action = {type: "move", tile: tile, dir: {x: 0, y: -1}};
             }
             if(key == 101) { // E
+                // Move up-right
                 action = {type: "move", tile: tile, dir: {x: 1, y: -1}};
             }
             if(key == 97) { //A
+                // Move left
                 action = {type: "move", tile: tile, dir: {x: -1, y: 0}};
             }
             if(key == 100) { //D
+                // Move right
                 action = {type: "move", tile: tile, dir: {x: 1, y: 0}};
             }
             if(key == 122) { //Z
+                // Move down-left
                 action = {type: "move", tile: tile, dir: {x: -1, y: 1}};
             }
             if(key == 120) { //X
+                // Move down-right
                 action = {type: "move", tile: tile, dir: {x: 0, y: 1}};
+            }
+            if(key == 116) { // T
+                // End turn
+                action = {type: "end"};
             }
             if(action == null) // The key press wasn't a move action
                 return;
                 
             // Check if the action is valid
             if(_this.gs.validAction(action, _this.playingAs)) {
-                // Move the cursor
-                _this.selectedTile = {x: action.tile.x + action.dir.x, y: action.tile.y + action.dir.y};
+                if(action.type == "move") {
+                    // Move the cursor
+                    _this.selectedTile = {x: action.tile.x + action.dir.x, y: action.tile.y + action.dir.y};
+                }
                 // Do the action locally
                 _this.gs.doAction(action);
                 // Send the action to the server
@@ -358,11 +370,29 @@ Interface.prototype.render = function() {
         // Draw the big rightmost UI
         ctx.fillStyle = "#DDDDDD";
         ctx.fillRect(canvas.width - 250, 0, 250, canvas.height - 157);
-        ctx.fillStyle = "#222222";
-        ctx.font = "20px Arial";
-        ctx.fillText("Game related info", canvas.width - 240, canvas.height / 3);
-        ctx.fillText("Unit stats/abilities", canvas.width - 240, canvas.height / 3 + 30);
-        ctx.fillText("Current turn, etc.", canvas.width - 240, canvas.height / 3 + 50);
+        
+        // Check if a unit is selected; if so, draw some info
+        var unit = this.gs.map.tileUnit(this.selectedTile);
+        if(unit != null) {
+            ctx.fillStyle = "#222222";
+            ctx.font = "24px Arial";
+            ctx.fillText(unit.raceName() + " " + unit.className(), canvas.width - 240, 30);
+            ctx.font = "20px Arial";
+            ctx.fillText("Controller: " + (unit.controller + 1), canvas.width - 240, 70);
+            ctx.fillText("Stats", canvas.width - 240, 110);
+            ctx.font = "16px Arial";
+            ctx.fillText("ST: " + unit.st, canvas.width - 220, 130);
+            ctx.fillText("DX: " + unit.dx, canvas.width - 150, 130);
+            ctx.fillText("IQ: " + unit.iq, canvas.width - 80, 130);
+            
+            ctx.font = "20px Arial";
+            ctx.fillText("Health: " + unit.health + "/" + unit.hp, canvas.width - 240, 170);
+            ctx.fillText("Mana: " + unit.mana + "/" + unit.mn, canvas.width - 240, 200);
+            
+            // Make steps text red if the unit is out of steps
+            if(unit.steps >= unit.speed) ctx.fillStyle = "#880000";
+            ctx.fillText("Steps: " + unit.steps + "/" + unit.speed, canvas.width - 240, 240);
+        }
     }
     
     // Draw users in this room
@@ -403,8 +433,7 @@ Interface.prototype.render = function() {
     ctx.fillRect(canvas.width - 250, canvas.height - 157, 250, 157);
     ctx.fillStyle = "#222222";
     ctx.font = "20px Arial";
-    ctx.fillText("More UI here", canvas.width - 240, canvas.height - 136);
-    ctx.fillText("Minimap, maybe?", canvas.width - 240, canvas.height - 116);
+    ctx.fillText("Turn: " + (this.gs.turn + 1), canvas.width - 240, canvas.height - 136);
 };
 
 Interface.prototype.renderMap = function(ctx) {

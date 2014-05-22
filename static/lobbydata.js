@@ -155,8 +155,10 @@ LobbyData.prototype.addClient = function(socket) {
                 }
             }
         } else {
-            console.log("<CHAT> " + client.name + ": " + data.message);
-            socket.broadcast.emit("chat", {from:client.name, message:data.message});
+            if (data.message.length > 0) {
+                console.log("<CHAT> " + client.name + ": " + data.message);
+                socket.broadcast.emit("chat", {from:client.name, message:data.message});
+            }
         }
     });
     

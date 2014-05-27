@@ -616,9 +616,11 @@ Interface.prototype.processChat = function(chat) {
                     message += sp[i] + " ";
                 }
                 if (this.getClientByName(sp[1]) != null || sp[1] == "console") {
-                    this.replyTo = sp[1];
-                    this.socket.emit("chat", {to:sp[1], message:message});
-                    this.addMessage("[" + this.clientlist[this.clientid] + " \u2192 " + sp[1] + "] " + message);
+                    if (message.length > 0) {
+                        this.replyTo = sp[1];
+                        this.socket.emit("chat", {to:sp[1], message:message});
+                        this.addMessage("[" + this.clientlist[this.clientid] + " \u2192 " + sp[1] + "] " + message);
+                    }
                 } else {
                     this.addMessage("User not found!");
                 }
@@ -642,8 +644,10 @@ Interface.prototype.processChat = function(chat) {
             this.addMessage("Unknown command. Type /help for help");
         }
     } else {
-        this.socket.emit("chat", {message: chat});
-        this.addMessage(this.clientlist[this.clientid] + ": " + chat);
+        if (chat.length > 0) {
+            this.socket.emit("chat", {message: chat});
+            this.addMessage(this.clientlist[this.clientid] + ": " + chat);
+        }
     }
 };
 

@@ -159,20 +159,21 @@ Map.prototype.rivergen = function(river_row, river_column, rows, cols, dir) {
   * A step between adjacent hexes is a distance of 1
   * Does not take into account non-walkable hexes
   */
-Map.prototype.distance = function(x1, y1, x2, y2) {
-    return Math.max(Math.abs(x2 - x1), Math.abs(y2 - y1), Math.abs(y2 + x2 - y1 - x1));
+Map.prototype.distance = function(a, b) {
+    return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y), Math.abs(a.x + a.y - b.x - b.y));
 };
 
 /** Chops corners off to make the map shaped like a large hexagon
   * Only works properly if rows and cols are odd and equal to each other
   */
 Map.prototype.makeHexShape = function() {
-    // Size of the corners to chop off
-    var cornerSize = (this.rows() - 1) / 2;
+    
+    var center = {x: Math.floor(this.cols() / 2), y: Math.floor(this.rows() / 2)};
+    var radius = Math.floor(this.cols() / 2);
     
     for(var r = 0; r < this.rows(); r++) {
         for(var c = 0; c < this.cols(); c++) {
-            if(this.distance(0, 0, r, c) < cornerSize || this.distance(this.rows() - 1, this.cols() - 1, r, c) < cornerSize) {
+            if(this.distance(center, {x: c, y: r}) > radius) {
                 this.terrain[r][c] = Tile.EMPTY;
             }
         }
@@ -313,6 +314,30 @@ Map.prototype.tileWalkable = function(tile) {
     if(unit != null) return false;
     
     return true;
+};
+
+/** Checks whether the given tile is a valid target for the given ability used by the given unit
+  * Even though some abilities target units instead of tiles, this is still valid */
+Map.prototype.validTarget = function(tile, unit, ability) {
+    if(!this.onGrid(tile)) return false;
+
+    var dist = this.distance(tile, unit.pos);
+    
+    var range = ability.range;
+    if(ability.type == "melee") {
+        range = 1;
+    }
+    
+    if(dist > range) return false;
+    
+    var target = this.tileUnit(tile);
+    
+    if(ability.target == "tile" && target == null) return true;
+    if(ability.target == "unit" && target != null) return true;
+    if(ability.target == "ally" && target != null && target.controller == unit.controller) return true;
+    if(ability.target == "enemy" && target != null && target.controller != unit.controller) return true;
+    
+    return false;
 };
 
 if(typeof exports === "object") {

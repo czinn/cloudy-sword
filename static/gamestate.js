@@ -24,8 +24,9 @@ var GameState = function(players, rows, columns) {
     
     this.turn = 0; // player that is currently playing (not the turn count)
     
-    // Add a test unit for each player
+    // Add a couple of test units for each player
     for(var i = 0; i < this.numPlayers; i++) {
+        this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "gnome", "wizard"));
         this.map.units.push(new Unit(this.map.randomTile(Tile.NORMAL), i, "gnome", "wizard"));
     }
 };
@@ -117,9 +118,22 @@ GameState.prototype.validAction = function(action, player) {
         var unit = this.map.tileUnit(tile);
         if(unit != null && unit.controller == player && this.map.tileWalkable(target) && unit.steps < unit.speed)
             return true;
-    } else if(action.type = "end") { // End turn action
+    } else if(action.type == "end") { // End turn action
         // End turn is always valid
         return true;
+    } else if(action.type == "ability") {
+        var unit = this.map.tileUnit(action.unit);
+        if(unit == null) return false;
+        if(unit.usedAbility) return false;
+        var ability = unit.abilities[action.ability];
+        if(ability == null) return false;
+        var target = action.target;
+        if(this.map.validTarget(target, unit, ability)) {
+            // Valid!
+            return true;
+        } else {
+            return false;
+        }
     }
     
     return false;
@@ -143,6 +157,23 @@ GameState.prototype.doAction = function(action) {
         this.endTurn();
         this.advanceTurn();
         this.startTurn();
+    } else if(action.type == "ability") { // Use an ability
+        var unit = this.map.tileUnit(action.unit);
+        var ability = unit.abilities[action.ability];
+        var target = action.target;
+        unit.usedAbility = true;
+        if(ability.target == "unit" || ability.target == "ally" || ability.target == "enemy") {
+            var targetUnit = this.map.tileUnit(target);
+            // Do ability things
+            if(typeof ability.action.damage !== "undefined") {
+                // Placeholder, just do some damage
+                targetUnit.health -= 5;
+            }
+            if(typeof ability.action.heal !== "undefined") {
+                // Placeholder, just do some healing
+                targetUnit.health += 5;
+            }
+        }
     }
 };
 
@@ -163,6 +194,8 @@ GameState.prototype.startTurn = function() {
         if(unit.controller == this.turn) {
             // Reset steps
             unit.steps = 0;
+            // Reset ability use
+            unit.usedAbility = false;
         }
     }
 };

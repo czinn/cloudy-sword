@@ -40,6 +40,7 @@ var Interface = function(canvas, gs, socket) {
     this.clientid = -1; // What our id is
     this.playingAs = -1; // Whether or not we are actually playing in the current game
     this.selectedTile = {x: -1, y: -1}; // Currently selected tile
+    this.usingAbility = -1; // Currently using ability?
     
     // Game list
     this.gamelist = {};
@@ -49,7 +50,7 @@ var Interface = function(canvas, gs, socket) {
     // Ping time for pinging
     var pingtime = 0;
     
-    // Last person to have been messaged, or recieved a message from
+    // Last person to have been messaged, or received a message from
     var replyTo = null;
     
     var _this = this;
@@ -80,6 +81,23 @@ var Interface = function(canvas, gs, socket) {
     socket.on("action", function(data) {
         // Update with the action
         _this.gs.doAction(data);
+        
+        if(data.type == "ability") {
+            // Since there are no ability animations yet, do a text indication of what happened in the chat
+            // Get the unit
+            var castingUnit = _this.gs.map.tileUnit(data.unit);
+            var controllerText = "Your";
+            if(castingUnit.controller != _this.playingAs) {
+                controllerText = _this.clientlist[_this.gs.players[castingUnit.controller]] + "'s";
+            }
+            // Get the unit name
+            var unitName = castingUnit.name();
+            // Get the ability name
+            var abilityName = castingUnit.abilities[data.ability].name;
+            // Add the message
+            _this.addMessage(controllerText + " " + unitName + " used the ability " + abilityName + ".");
+        }
+        
     });
     socket.on("gamelist", function(data) {
         // Update the local list of games
@@ -264,19 +282,20 @@ var Interface = function(canvas, gs, socket) {
                 // End turn
                 action = {type: "end"};
             }
-            if(action == null) // The key press wasn't a move action
+            if(key >= 49 && key <= 57) { // 1 to 9
+                var num = key - 49;
+                // Try to use ability num
+                var unit = _this.gs.map.tileUnit(tile);
+                if(unit != null && unit.controller == _this.playingAs && unit.abilities.length > num) {
+                    _this.usingAbility = num;
+                }
+            }
+            if(action == null) // The key press an action
                 return;
                 
             // Check if the action is valid
             if(_this.gs.validAction(action, _this.playingAs)) {
-                if(action.type == "move") {
-                    // Move the cursor
-                    _this.selectedTile = {x: action.tile.x + action.dir.x, y: action.tile.y + action.dir.y};
-                }
-                // Do the action locally
-                _this.gs.doAction(action);
-                // Send the action to the server
-                _this.socket.emit("action", action);
+                _this.doAction(action);
             }
         }
     }
@@ -286,6 +305,18 @@ var Interface = function(canvas, gs, socket) {
     this.resize();
     this.render();
 };
+
+/** Does the given action and updates interface elements if needed */
+Interface.prototype.doAction = function(action) {
+    if(action.type == "move") {
+        // Move the cursor
+        this.selectedTile = {x: action.tile.x + action.dir.x, y: action.tile.y + action.dir.y};
+    }
+    // Do the action locally
+    this.gs.doAction(action);
+    // Send the action to the server
+    this.socket.emit("action", action);
+}
 
 /** Adds the given message to the message log */
 Interface.prototype.addMessage = function(message) {
@@ -308,10 +339,23 @@ Interface.prototype.addMessage = function(message) {
   */
 Interface.prototype.clickTile = function(tile) {
     if(this.uistate == 1) { // In-game
-        if(this.gs.map.onGrid(tile)) {
-            this.selectedTile = tile;
+        if(this.usingAbility == -1) {
+            if(this.gs.map.onGrid(tile)) {
+                this.selectedTile = tile;
+            } else {
+                this.selectedTile = {x: -1, y: -1};
+            }
         } else {
-            this.selectedTile = {x: -1, y: -1};
+            var unit = this.gs.map.tileUnit(this.selectedTile);
+            ability = unit.abilities[this.usingAbility];
+            if(this.gs.map.validTarget(tile, unit, ability)) {
+                // Do an ability action
+                var action = {type: "ability", unit: unit.pos, ability: this.usingAbility, target: tile};
+                this.doAction(action);
+            } else {
+                this.addMessage("Invalid target.");
+            }
+            this.usingAbility = -1;
         }
     }
 };
@@ -395,6 +439,11 @@ Interface.prototype.render = function() {
             // Make steps text red if the unit is out of steps
             if(unit.steps >= unit.speed) ctx.fillStyle = "#880000";
             ctx.fillText("Steps: " + unit.steps + "/" + unit.speed, canvas.width - 240, 240);
+            
+            // Show abilities
+            for(var i = 0; i < unit.abilities.length; i++) {
+                ctx.fillText((i + 1) + " - " + unit.abilities[i].name, canvas.width - 240, 280 + 20 * i)
+            }
         }
     }
     
@@ -437,6 +486,11 @@ Interface.prototype.render = function() {
     ctx.fillStyle = "#222222";
     ctx.font = "20px Arial";
     ctx.fillText("Turn: " + (this.gs.turn + 1), canvas.width - 240, canvas.height - 136);
+    if(this.usingAbility != -1) {
+        var unit = this.gs.map.tileUnit(this.selectedTile);
+        var ability = unit.abilities[this.usingAbility];
+        ctx.fillText("Casting: " + ability.name, canvas.width - 240, canvas.height - 100);
+    }
 };
 
 Interface.prototype.renderMap = function(ctx) {
@@ -452,6 +506,13 @@ Interface.prototype.renderMap = function(ctx) {
     // Calculate the width and height of each hexagon
     var h = HEX_HEIGHT * scale;
     var w = Math.round(Math.sqrt(3) / 2 * h);
+    
+    // Check if using an ability; if so, get the ability
+    var ability = null;
+    if(this.usingAbility != -1) {
+        var unit = this.gs.map.tileUnit(this.selectedTile);
+        ability = unit.abilities[this.usingAbility];
+    }
     
     // Go through each hexagon on the map and see if it's in the window
     for(var r = 0; r < map.rows(); r++) {
@@ -478,6 +539,22 @@ Interface.prototype.renderMap = function(ctx) {
                 
                 ctx.fill();
                 ctx.stroke();
+                
+                // If there's an ability and this tile is a valid target, draw an inner yellow ring
+                if(ability != null) {
+                    if(this.gs.map.validTarget({x: c, y: r}, this.gs.map.tileUnit(this.selectedTile), ability)) {
+                        ctx.strokeStyle = "#FFFF00";
+                        ctx.beginPath();
+                        ctx.moveTo(x + hexx + 1, y + hexy + h / 4);
+                        ctx.lineTo(x + hexx + w / 2, y + hexy + 1);
+                        ctx.lineTo(x + hexx + w - 1, y + hexy + h / 4);
+                        ctx.lineTo(x + hexx + w - 1, y + hexy + h * 3 / 4);
+                        ctx.lineTo(x + hexx + w / 2, y + hexy + h - 1);
+                        ctx.lineTo(x + hexx + 1, y + hexy + h * 3 / 4);
+                        ctx.lineTo(x + hexx + 1, y + hexy + h / 4);
+                        ctx.stroke();
+                    }
+                }
                 
                 // Draw unit
                 var unit = map.tileUnit({x: c, y: r});

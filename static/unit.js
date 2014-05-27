@@ -16,13 +16,14 @@ var Unit = function(pos, controller, race, cls) {
     this.cls = cls;
     
     // Set up base stats (that don't change during the game)
-    // These will be loaded from config files based on race and class, but for now they are constant
+    // These are loaded from config files based on race and class
     this.loadStats();
     
     // Set up status variables (that change during the game)
     this.health = this.hp; // current health
     this.mana = this.mn; // current mana
     this.steps = 0; // steps this turn
+    this.usedAbility = false; // used an ability this turn
 };
 
 /** Loads base stats and abilities based on the race and class of the unit */
@@ -50,7 +51,8 @@ Unit.prototype.dump = function() {
         cls: this.cls,
         health: this.health,
         mana: this.mana,
-        steps: this.steps
+        steps: this.steps,
+        usedAbility: this.usedAbility
     };
 };
 
@@ -65,6 +67,13 @@ Unit.prototype.load = function(obj) {
     this.health = obj.health;
     this.mana = obj.mana;
     this.steps = obj.steps;
+    this.usedAbility = obj.usedAbility;
+};
+
+/** Heals the given amount, without going over max health */
+Unit.prototype.heal = function(amt) {
+    this.health += amt;
+    if(this.health > this.hp) this.health = this.hp;
 };
 
 /** Returns a nicely formatted race name (capitalized, etc.) */
@@ -76,6 +85,11 @@ Unit.prototype.raceName = function() {
 Unit.prototype.className = function() {
     return this.cls.charAt(0).toUpperCase() + this.cls.slice(1);
 };
+
+/** Returns a nicely formatted name for the unit */
+Unit.prototype.name = function() {
+    return this.raceName() + " " + this.className();
+}
 
 if(typeof exports !== "undefined") {
     module.exports = Unit;

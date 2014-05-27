@@ -2,18 +2,28 @@ var classes = {
     wizard: {
         abilities: [
             {
-                name: "poke",
+                name: "Poke",
                 type: "melee",
+                target: "enemy",
                 action: {
                     damage: "st+5*r"
                 }
             },
             {
-                name: "fireball",
+                name: "Fireball",
                 type: "ranged",
+                target: "enemy",
                 range: 10,
                 action: {
                     damage: "iq+5*r"
+                }
+            },
+            {
+                name: "Heal",
+                type: "melee",
+                target: "ally",
+                action: {
+                    heal: "iq/2+3*r"
                 }
             }
         ]

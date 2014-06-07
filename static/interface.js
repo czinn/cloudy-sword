@@ -288,6 +288,8 @@ var Interface = function(canvas, gs, socket) {
                 var unit = _this.gs.map.tileUnit(tile);
                 if(unit != null && unit.controller == _this.playingAs && unit.abilities.length > num) {
                     _this.usingAbility = num;
+        
+                    this.gs.map.clearCache();
                 }
             }
             if(action == null) // The key press an action
@@ -357,6 +359,8 @@ Interface.prototype.clickTile = function(tile) {
             }
             this.usingAbility = -1;
         }
+        
+        this.gs.map.clearCache();
     }
 };
 
@@ -500,95 +504,16 @@ Interface.prototype.renderMap = function(ctx) {
     var y = 0;
     var width = this.canvas.width - 250;
     var height = this.canvas.height - 157;
-    var offsetx = this.offsetx;
-    var offsety = this.offsety;
     var scale = this.scale;
-
-    // Calculate the width and height of each hexagon
-    var h = HEX_HEIGHT * scale;
-    var w = Math.round(Math.sqrt(3) / 2 * h);
+    var sx = this.offsetx / scale;
+    var sy = this.offsety / scale;
+    var swidth = width / scale;
+    var sheight = height / scale;
     
-    // Check if using an ability; if so, get the ability
-    var ability = null;
-    if(this.usingAbility != -1) {
-        var unit = this.gs.map.tileUnit(this.selectedTile);
-        ability = unit.abilities[this.usingAbility];
-    }
     
-    // Go through each hexagon on the map and see if it's in the window
-    for(var r = 0; r < map.rows(); r++) {
-        for(var c = 0; c < map.cols(); c++) {
-            // Determine the location of the top left bounding box of this hex
-            var hexx = (c + r / 2) * w - offsetx;
-            var hexy = (r * 3 / 4) * h - offsety;
-            
-            // Check if the hexagon is in the window
-            if(hexx + w >= 0 && hexx <= width && hexy + h >= 0 && hexy <= height) {
-                // Set color
-                var color = Tile.properties[map.terrain[r][c]].color;
-                ctx.fillStyle = color;
-                ctx.strokeStyle = map.terrain[r][c] != Tile.EMPTY ? "#222222" : "#000000"; //hex border
-                
-                ctx.beginPath();
-                ctx.moveTo(x + hexx, y + hexy + h / 4);
-                ctx.lineTo(x + hexx + w / 2, y + hexy);
-                ctx.lineTo(x + hexx + w, y + hexy + h / 4);
-                ctx.lineTo(x + hexx + w, y + hexy + h * 3 / 4);
-                ctx.lineTo(x + hexx + w / 2, y + hexy + h);
-                ctx.lineTo(x + hexx, y + hexy + h * 3 / 4);
-                ctx.lineTo(x + hexx, y + hexy + h / 4);
-                
-                ctx.fill();
-                ctx.stroke();
-                
-                // If there's an ability and this tile is a valid target, draw an inner yellow ring
-                if(ability != null) {
-                    if(this.gs.map.validTarget({x: c, y: r}, this.gs.map.tileUnit(this.selectedTile), ability)) {
-                        ctx.strokeStyle = "#FFFF00";
-                        ctx.beginPath();
-                        ctx.moveTo(x + hexx + 1, y + hexy + h / 4);
-                        ctx.lineTo(x + hexx + w / 2, y + hexy + 1);
-                        ctx.lineTo(x + hexx + w - 1, y + hexy + h / 4);
-                        ctx.lineTo(x + hexx + w - 1, y + hexy + h * 3 / 4);
-                        ctx.lineTo(x + hexx + w / 2, y + hexy + h - 1);
-                        ctx.lineTo(x + hexx + 1, y + hexy + h * 3 / 4);
-                        ctx.lineTo(x + hexx + 1, y + hexy + h / 4);
-                        ctx.stroke();
-                    }
-                }
-                
-                // Draw unit
-                var unit = map.tileUnit({x: c, y: r});
-                if(unit != null) {
-                    ctx.fillStyle = PLAYER_COLORS[unit.controller];
-                    ctx.beginPath();
-                    ctx.arc(x + hexx + w / 2, y + hexy + h / 2, w / 3, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            }
-        }
-    }
+    var image = map.getImage({selectedTile: this.selectedTile, usingAbility: this.usingAbility});
     
-    // Go back and draw the selected ring
-    if(this.selectedTile.x >= 0) {
-        var hexx = (this.selectedTile.x + this.selectedTile.y / 2) * w - offsetx;
-        var hexy = (this.selectedTile.y * 3 / 4) * h - offsety;
-        // Check if the hexagon is in the window
-        if(hexx + w >= 0 && hexx <= width && hexy + h >= 0 && hexy <= height) {
-            ctx.strokeStyle = "#FF0000";
-            
-            ctx.beginPath();
-            ctx.moveTo(x + hexx, y + hexy + h / 4);
-            ctx.lineTo(x + hexx + w / 2, y + hexy);
-            ctx.lineTo(x + hexx + w, y + hexy + h / 4);
-            ctx.lineTo(x + hexx + w, y + hexy + h * 3 / 4);
-            ctx.lineTo(x + hexx + w / 2, y + hexy + h);
-            ctx.lineTo(x + hexx, y + hexy + h * 3 / 4);
-            ctx.lineTo(x + hexx, y + hexy + h / 4);
-            
-            ctx.stroke();
-        }
-    }
+    ctx.drawImage(image, sx, sy, swidth, sheight, x, y, width, height);
 };
 
 Interface.prototype.processChat = function(chat) {

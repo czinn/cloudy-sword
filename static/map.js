@@ -12,6 +12,9 @@ if(typeof exports === "object") {
   * Creates an empty map of the specified dimensions.
   */
 var Map = function(rows, cols, rivernum) {
+    // Creates a cache to store the map image in
+    this.cache = null;
+
     // Create an normal terrain instead of empty for testing
     this.terrain = [];
 
@@ -23,7 +26,7 @@ var Map = function(rows, cols, rivernum) {
     }
     
     // Create array to hold units
-    this.units = []; 
+    this.units = [];
 
     //If no number of rivers given, use default of 1
     if (rivernum == null) {
@@ -212,6 +215,8 @@ Map.prototype.load = function(obj) {
         unit.load(obj.units[i]);
         this.units.push(unit);
     }
+    
+    this.clearCache();
 };
 
 /** Returns a random tile that is of the given type */
@@ -243,6 +248,8 @@ Map.prototype.tileAt = function(location) {
 /** Sets the tile at the location with the given tile type */
 Map.prototype.setTile = function(location, tile) {
     this.terrain[location.y][location.x] = tile;
+    
+    this.clearCache();
 }
 
 /** Counts the number of tiles around a given location of the given type */
@@ -338,6 +345,107 @@ Map.prototype.validTarget = function(tile, unit, ability) {
     if(ability.target == "enemy" && target != null && target.controller != unit.controller) return true;
     
     return false;
+};
+
+/** Clears the map image cache */
+Map.prototype.clearCache = function() {
+    this.cache = null;
+    this.cacheSettings = null;
+};
+
+/** Gets the raw, unscaled image of the map
+  * Settings is a map of various extra things that need to be drawn (i.e. ability, selector, etc.)
+  */
+Map.prototype.getImage = function(settings) {
+    if(this.cache != null) {
+        return this.cache;
+    }
+    
+    var buffer = document.createElement("canvas");
+    buffer.width = 10000; //todo: calculate width
+    buffer.height = 10000; //todo: calculate height
+    var ctx = buffer.getContext("2d");
+    
+    // BEGIN DRAWING
+    // Calculate the width and height of each hexagon
+    var h = HEX_HEIGHT;
+    var w = Math.round(Math.sqrt(3) / 2 * h);
+    
+    ctx.lineWidth = 3;
+    
+    // Check if using an ability; if so, get the ability
+    var ability = null;
+    if(typeof settings.usingAbility !== "undefined" && settings.usingAbility != -1) {
+        var unit = this.tileUnit(settings.selectedTile);
+        ability = unit.abilities[settings.usingAbility];
+    }
+    
+    // Go through each hexagon on the map and see if it's in the window
+    for(var r = 0; r < this.rows(); r++) {
+        for(var c = 0; c < this.cols(); c++) {
+            // Determine the location of the top left bounding box of this hex
+            var hexx = (c + r / 2) * w;
+            var hexy = (r * 3 / 4) * h;
+            
+            // Set color
+            var color = Tile.properties[this.terrain[r][c]].color;
+            ctx.fillStyle = color;
+            ctx.strokeStyle = this.terrain[r][c] != Tile.EMPTY ? "#222222" : "#000000"; //hex border
+            
+            ctx.beginPath();
+            ctx.moveTo(hexx, hexy + h / 4);
+            ctx.lineTo(hexx + w / 2, hexy);
+            ctx.lineTo(hexx + w, hexy + h / 4);
+            ctx.lineTo(hexx + w, hexy + h * 3 / 4);
+            ctx.lineTo(hexx + w / 2, hexy + h);
+            ctx.lineTo(hexx, hexy + h * 3 / 4);
+            ctx.lineTo(hexx, hexy + h / 4);
+            
+            ctx.fill();
+            ctx.stroke();
+            
+            // Draw unit
+            var unit = this.tileUnit({x: c, y: r});
+            if(unit != null) {
+                ctx.fillStyle = PLAYER_COLORS[unit.controller];
+                ctx.beginPath();
+                ctx.arc(hexx + w / 2, hexy + h / 2, w / 3, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // If there's an ability and this tile is a valid target, draw a little yellow dot
+            if(ability != null) {
+                if(this.validTarget({x: c, y: r}, this.tileUnit(settings.selectedTile), ability)) {
+                    ctx.fillStyle = "#FFFF00";
+                    ctx.beginPath();
+                    ctx.arc(hexx + w / 2, hexy + h / 2, w / 8, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+    }
+    
+    // Go back and draw the selected ring
+    if(typeof settings.selectedTile !== "undefined" && settings.selectedTile.x >= 0) {
+        var hexx = (settings.selectedTile.x + settings.selectedTile.y / 2) * w;
+        var hexy = (settings.selectedTile.y * 3 / 4) * h;
+        
+        ctx.strokeStyle = "#FF0000";
+        
+        ctx.beginPath();
+        ctx.moveTo(hexx, hexy + h / 4);
+        ctx.lineTo(hexx + w / 2, hexy);
+        ctx.lineTo(hexx + w, hexy + h / 4);
+        ctx.lineTo(hexx + w, hexy + h * 3 / 4);
+        ctx.lineTo(hexx + w / 2, hexy + h);
+        ctx.lineTo(hexx, hexy + h * 3 / 4);
+        ctx.lineTo(hexx, hexy + h / 4);
+        
+        ctx.stroke();
+    }
+    
+    this.cache = buffer;
+    return buffer;
 };
 
 if(typeof exports === "object") {

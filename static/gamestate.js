@@ -175,6 +175,8 @@ GameState.prototype.doAction = function(action) {
             }
         }
     }
+    
+    this.map.clearCache();
 };
 
 /** Gets a summary of information about the game for display in the lobby */
@@ -198,6 +200,8 @@ GameState.prototype.startTurn = function() {
             unit.usedAbility = false;
         }
     }
+    
+    this.map.clearCache();
 };
 
 GameState.prototype.advanceTurn = function() {
@@ -206,11 +210,15 @@ GameState.prototype.advanceTurn = function() {
     if(this.turn >= this.numPlayers) {
         this.turn = 0;
     }
+    
+    this.map.clearCache();
 };
 
 /** Does end of turn stuff for the current player */
 GameState.prototype.endTurn = function() {
     // Currently nothing happens at the end of a turn
+    
+    this.map.clearCache();
 };
 
 if(typeof exports === "object") {
